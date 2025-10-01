@@ -33,9 +33,15 @@ export class AuthService {
   
     const accessToken = this.jwtService.sign(payload, { expiresIn: '15m' });
     const refreshToken = randomBytes(64).toString('hex');
-    const refreshHash = await argon2.hash(refreshToken);
+    const refreshHash = await argon2.hash(refreshToken, {
+      type: argon2.argon2id,
+      memoryCost: 2 ** 16, // 64MB
+      timeCost: 3,
+      parallelism: 1,
+      hashLength: 32
+    });
     await this.prisma.refreshToken.create({
-      data: { tokenHash: refreshHash, userId: user.id, expiresAt: addDays(30) }
+      data: { tokenHash: refreshHash, userId: user.id, expiresAt: '10d' }
     });
     return { accessToken, refreshToken };
   }
