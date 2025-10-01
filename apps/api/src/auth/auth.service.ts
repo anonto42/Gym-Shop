@@ -1,33 +1,28 @@
 import { Injectable } from '@nestjs/common';
 import { CreateAuthDto } from './dto/create-auth.dto';
 import { UpdateAuthDto } from './dto/update-auth.dto';
-import { PrismaService } from 'src/prisma/prisma.service';
 import { JwtService } from '@nestjs/jwt';
 import * as argon2 from 'argon2';
-import { User } from 'generated/prisma';
-import { addDays } from 'date-fns';
 import { randomBytes } from 'crypto';
+import { InjectRepository } from '@nestjs/typeorm';
+import { User } from 'src/user/entities/user.entity';
+import { Repository } from 'typeorm';
 
 @Injectable()
 export class AuthService {
 
   constructor(
-    private readonly prisma: PrismaService,
+    @InjectRepository(User)
+    private usersRepo: Repository<User>,
     private readonly jwtService: JwtService
   ) {}
 
-  async validateUser(email: string, pass: string) {
+  createUser(email: string, password: string){
+    const user = this.usersRepo.create({ email, password })
     
-    const user = await this.prisma.user.findUnique({ where: { email }});
-    if (!user || !user.passwordHash) return null;
-
-    const matches = await argon2.verify(user.passwordHash, pass);
-    if (!matches) return null;
-    
-    return user;
   }
 
-  async login(user: User) {
+  async login(user) {
     const roles = await this.getUserRoles(user.id);
     const payload = { sub: user.id, roles };
   
@@ -40,19 +35,10 @@ export class AuthService {
       parallelism: 1,
       hashLength: 32
     });
-    await this.prisma.refreshToken.create({
-      data: { tokenHash: refreshHash, userId: user.id, expiresAt: '10d' }
-    });
     return { accessToken, refreshToken };
   }
 
   async getUserRoles(userId: string): Promise<string[]> {
-    const user = await this.prisma.user.findUnique({
-      where: { id: userId },
-      include: { roles: true },  // 👈 load roles
-    });
-  
-    if (!user) return [];
-    return user.roles.map(r => r.name);
+    return [""]
   }
 }
