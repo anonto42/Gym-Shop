@@ -1,26 +1,52 @@
 import { Injectable } from '@nestjs/common';
 import { CreateAuthDto } from './dto/create-auth.dto';
 import { UpdateAuthDto } from './dto/update-auth.dto';
+import { PrismaService } from 'src/prisma/prisma.service';
+import { JwtService } from '@nestjs/jwt';
+import * as argon2 from 'argon2';
+import { User } from 'generated/prisma';
+import { addDays } from 'date-fns';
+import { randomBytes } from 'crypto';
 
 @Injectable()
 export class AuthService {
-  create(createAuthDto: CreateAuthDto) {
-    return 'This action adds a new auth';
+
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly jwtService: JwtService
+  ) {}
+
+  async validateUser(email: string, pass: string) {
+    
+    const user = await this.prisma.user.findUnique({ where: { email }});
+    if (!user || !user.passwordHash) return null;
+
+    const matches = await argon2.verify(user.passwordHash, pass);
+    if (!matches) return null;
+    
+    return user;
   }
 
-  findAll() {
-    return `This action returns all auth`;
+  async login(user: User) {
+    const roles = await this.getUserRoles(user.id);
+    const payload = { sub: user.id, roles };
+  
+    const accessToken = this.jwtService.sign(payload, { expiresIn: '15m' });
+    const refreshToken = randomBytes(64).toString('hex');
+    const refreshHash = await argon2.hash(refreshToken);
+    await this.prisma.refreshToken.create({
+      data: { tokenHash: refreshHash, userId: user.id, expiresAt: addDays(30) }
+    });
+    return { accessToken, refreshToken };
   }
 
-  findOne(id: number) {
-    return `This action returns a #${id} auth`;
-  }
-
-  update(id: number, updateAuthDto: UpdateAuthDto) {
-    return `This action updates a #${id} auth`;
-  }
-
-  remove(id: number) {
-    return `This action removes a #${id} auth`;
+  async getUserRoles(userId: string): Promise<string[]> {
+    const user = await this.prisma.user.findUnique({
+      where: { id: userId },
+      include: { roles: true },  // 👈 load roles
+    });
+  
+    if (!user) return [];
+    return user.roles.map(r => r.name);
   }
 }
