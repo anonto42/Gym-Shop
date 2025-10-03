@@ -10,19 +10,25 @@ import { PaymentsModule } from './payments/payments.module';
 import { FilesModule } from './files/files.module';
 import { JobsModule } from './jobs/jobs.module';
 import { TypeOrmModule } from '@nestjs/typeorm';
-import { User } from './user/entities/user.entity';
+import { ConfigModule, ConfigService } from '@nestjs/config';
+import { join } from 'path';
 
 @Module({
   imports: [
-    TypeOrmModule.forRoot({
-      type: 'postgres',
-      host: process.env.DB_HOST,
-      port: Number(process.env.DB_PORT),
-      username: process.env.DB_USERNAME,
-      password: process.env.DB_PASSWORD,
-      database: process.env.DB_NAME,
-      entities: [User],
-      synchronize: true,
+    ConfigModule.forRoot(),
+    TypeOrmModule.forRootAsync({
+      imports:[ ConfigModule ],
+      inject: [ ConfigService ],
+      useFactory: ( configService: ConfigService ) => ({
+        type: 'postgres',
+        host: configService.get('DB_HOST'),
+        port: +configService.get('DB_PORT'),
+        username: configService.get('DB_USERNAME'),
+        password: configService.get('DB_PASSWORD'),
+        database: configService.get('DB_NAME'),
+        entities: [ join(process.cwd(), 'dist/**/*.entity.js')],
+        synchronize: true // Don't have to use on the production
+      })
     }),
     AuthModule, 
     UserModule, 
