@@ -1,11 +1,11 @@
 import React from 'react'
 
 interface ITitle {
-  title?: React.ReactNode
+  children?: React.ReactNode
 }
 
 export default function ModalTitle({
-  title = "Title 🎩"
+  children = "Title 🎩"
 }: ITitle) {
-  return <>{title}</>
+  return <>{children}</>
 }
