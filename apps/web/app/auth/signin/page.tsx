@@ -1,7 +1,7 @@
 import React from 'react'
 import createMetaData from 'helper/createMetaData'
 import { Metadata } from 'next';
-import SignInContainer from '../_components/_signIn/SignInContainer';
+import AuthContainer from '../_components/_auth/AuthContainer';
 
 export const metadata: Metadata = createMetaData({
     title: "Sign In",
@@ -26,5 +26,5 @@ export const metadata: Metadata = createMetaData({
 
 export default function SignInPage() {
 
-  return <SignInContainer />
+  return <AuthContainer page='signin' />
 }
