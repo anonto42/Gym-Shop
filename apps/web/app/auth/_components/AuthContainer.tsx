@@ -1,6 +1,6 @@
 "use client"
 import React, { Component } from 'react'
-import SignInView from './SignInView'
+import SignInView from './SignInView';
 import SignUpView from './SignUpView';
 
 type Tpage = 'signin' | 'signup' | 'forgot-password' | 'set-password' | 'enter-otp';

@@ -1,7 +1,7 @@
 import createMetaData from 'helper/createMetaData';
 import { Metadata } from 'next';
 import React from 'react'
-import AuthContainer from '../_components/_auth/AuthContainer';
+import AuthContainer from '../_components/AuthContainer';
 
 export const metadata: Metadata = createMetaData({
   title: "Sign Up",
