@@ -19,11 +19,11 @@ type TOpenGraph = {
 }
 
 interface ICreateMetaData {
-    title: string;
-    description: string;
-    keywords: string[];
-    authors: TAuthor[];
-    openGraph: TOpenGraph;
+    title?: string;
+    description?: string;
+    keywords?: string[];
+    authors?: TAuthor[];
+    openGraph?: TOpenGraph;
 }
 
 export default function createMetaData({
