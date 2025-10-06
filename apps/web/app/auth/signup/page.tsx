@@ -6,7 +6,7 @@ import AuthContainer from '../_components/AuthContainer';
 export const metadata: Metadata = createMetaData({
   title: "Sign Up",
   description: "Sign Up",
-  keywords: ["Sign Up", "Sign Up Page"],
+  keywords: ["Sign Up", "Sign Up Page", "Sign Up Page"],
 });
 
 export default function SignUpPage() {
