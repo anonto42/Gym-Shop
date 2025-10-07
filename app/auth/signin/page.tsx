@@ -38,7 +38,8 @@ const SignIn = () => {
         <CardFooter className='gap-3 grid'>
           <Button variant="outline" className='w-full bg-black text-white border-0 text-xs' onClick={handleSignIn}>Log In</Button>
           <Button variant="outline" className='w-full bg-white text-black border-0 text-xs'>Continue With Google</Button>
-          <CardDescription className='text-center text-xs text-white'>Don't have an account? <span className='text-xs font-bold cursor-pointer' onClick={() => router.push('/auth/signup')}>Sign Up</span></CardDescription>
+          <CardDescription className='text-center text-xs text-white'>
+          {"Don't have an account? "} <span className='text-xs font-bold cursor-pointer' onClick={() => router.push('/auth/signup')}>Sign Up</span></CardDescription>
         </CardFooter>
       </Card>
     </div>
