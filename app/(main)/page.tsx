@@ -1,7 +1,7 @@
 import AutoSlider from "@/components/section/AutoSlider";
 import HeroSection from "@/components/section/HeroSection";
+import PromoAndDelivery from "@/components/section/PromoAndDelivery";
 import ValuablePackages from "@/components/section/ValuablePackages";
-
 
 export default function Home() {
   return (
@@ -9,6 +9,7 @@ export default function Home() {
       <HeroSection />
       <AutoSlider />
       <ValuablePackages />
+      <PromoAndDelivery />
     </div>
   );
 }
