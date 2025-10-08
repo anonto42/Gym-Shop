@@ -5,7 +5,7 @@ import { UserCircle } from "lucide-react";
 
 const TopBar = () => {
   return (
-    <div className="w-full bg-[#222222] text-white text-xs py-2 px-4 flex justify-end items-center">
+    <div className="w-full bg-[#222222] text-white sm:text-xs text-[7px] py-2 px-4 flex justify-end items-center">
       {/* Left links */}
       <div className="flex gap-4">
         <Link href="/contact-us" className="hover:underline border-r pr-3">
