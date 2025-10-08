@@ -21,7 +21,7 @@ const HeroSection = () => {
       >
         <h1 className="text-4xl md:text-5xl lg:text-6xl font-extrabold text-white leading-tight drop-shadow-lg">
           Buy for your Pet <br />
-          <span className="text-black">Whatever It’s Need</span>
+          <span className="">Whatever It’s Need</span>
         </h1>
 
         <p className="text-gray-100 text-sm md:text-base max-w-lg mx-auto md:mx-0 leading-relaxed">
@@ -30,7 +30,7 @@ const HeroSection = () => {
           your pet’s happiness.
         </p>
 
-        <Button className="bg-white text-black font-semibold px-6 py-3 text-sm md:text-base rounded-full hover:bg-transparent hover:text-white hover:border hover:border-white transition duration-200 ease-in-out">
+        <Button className="bg-white text-black font-semibold px-6 py-6 text-sm md:text-base rounded-full hover:bg-transparent hover:text-white hover:border hover:border-white transition duration-200 ease-in-out">
           Browse All Products
         </Button>
       </motion.div>
