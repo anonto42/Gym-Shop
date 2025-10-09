@@ -35,19 +35,19 @@ const ValuablePackages = () => {
         <PackageCart
           star={5}
           title="Healthy Dog Food Pack"
-          image={imageUrl.food}
+          image={imageUrl.packageImage.image1}
           delay={0.1}
         />
         <PackageCart
           star={4}
           title="Premium Cat Essentials"
-          image={imageUrl.haveToDo}
+          image={imageUrl.packageImage.image2}
           delay={0.2}
         />
         <PackageCart
           star={5}
           title="Luxury Pet Grooming Kit"
-          image={imageUrl.needed}
+          image={imageUrl.packageImage.image3}
           delay={0.3}
         />
       </motion.div>
