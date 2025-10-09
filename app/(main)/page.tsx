@@ -1,3 +1,4 @@
+import AboutService from "@/components/section/AboutService";
 import SpecialProducts from "@/components/layout/SpecialProducts";
 import AutoSlider from "@/components/section/AutoSlider";
 import HeroSection from "@/components/section/HeroSection";
@@ -12,6 +13,7 @@ export default function Home() {
       <ValuablePackages />
       <PromoAndDelivery />
       <SpecialProducts />
+      <AboutService />
     </div>
   );
 }
