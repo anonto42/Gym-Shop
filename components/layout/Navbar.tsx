@@ -20,8 +20,8 @@ const Navbar = () => {
   ];
 
   return (
-    <>
-      <nav className="w-full bg-[#222222] py-3 px-6 shadow-md flex items-center justify-between">
+    <div className="w-full bg-[#222222]">
+      <nav className=" py-3 px-6 shadow-md flex items-center justify-between max-w-[1540px] mx-auto">
         {/* Logo */}
         <Link href="/" className="text-xl font-bold text-[#F27D31]">
           GymShop
@@ -152,7 +152,7 @@ const Navbar = () => {
           </motion.div>
         )}
       </AnimatePresence>
-    </>
+    </div>
   );
 };
 
