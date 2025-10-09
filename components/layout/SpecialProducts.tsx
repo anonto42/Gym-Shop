@@ -2,6 +2,7 @@
 import React from 'react'
 import { motion } from 'framer-motion'
 import ProductCart from '../card/ProductCart'
+import imageUrl from '@/const/imageUrl'
 
 function SpecialProducts() {
   return (
@@ -26,25 +27,29 @@ function SpecialProducts() {
         whileInView={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.6 }}
         viewport={{ once: true }}
-        className="flex flex-wrap justify-center gap-3"
+        className="flex flex-wrap justify-center gap-3 max-w-[1540px]"
       >
-        <ProductCart image='https://assets.turbologo.com/blog/en/2021/09/10093610/photo-camera-480x288.png' />
-        <ProductCart image='https://assets.turbologo.com/blog/en/2021/09/10093610/photo-camera-480x288.png' />
-        <ProductCart image='https://assets.turbologo.com/blog/en/2021/09/10093610/photo-camera-480x288.png' />
-        <ProductCart image='https://assets.turbologo.com/blog/en/2021/09/10093610/photo-camera-480x288.png' />
-        <ProductCart image='https://assets.turbologo.com/blog/en/2021/09/10093610/photo-camera-480x288.png' />
-        <ProductCart image='https://assets.turbologo.com/blog/en/2021/09/10093610/photo-camera-480x288.png' />
-        <ProductCart image='https://assets.turbologo.com/blog/en/2021/09/10093610/photo-camera-480x288.png' />
-        <ProductCart image='https://assets.turbologo.com/blog/en/2021/09/10093610/photo-camera-480x288.png' />
-        <ProductCart image='https://assets.turbologo.com/blog/en/2021/09/10093610/photo-camera-480x288.png' />
-        <ProductCart image='https://assets.turbologo.com/blog/en/2021/09/10093610/photo-camera-480x288.png' />
-        <ProductCart image='https://assets.turbologo.com/blog/en/2021/09/10093610/photo-camera-480x288.png' />
-        <ProductCart image='https://assets.turbologo.com/blog/en/2021/09/10093610/photo-camera-480x288.png' />
-        <ProductCart image='https://assets.turbologo.com/blog/en/2021/09/10093610/photo-camera-480x288.png' />
-        <ProductCart image='https://assets.turbologo.com/blog/en/2021/09/10093610/photo-camera-480x288.png' />
-        <ProductCart image='https://assets.turbologo.com/blog/en/2021/09/10093610/photo-camera-480x288.png' />
-        <ProductCart image='https://assets.turbologo.com/blog/en/2021/09/10093610/photo-camera-480x288.png' />
-        <ProductCart image='https://assets.turbologo.com/blog/en/2021/09/10093610/photo-camera-480x288.png' />
+        <ProductCart image={imageUrl.product} />
+        <ProductCart image={imageUrl.product} />
+        <ProductCart image={imageUrl.product} />
+        <ProductCart image={imageUrl.product} />
+        <ProductCart image={imageUrl.product} />
+        <ProductCart image={imageUrl.product} />
+        <ProductCart image={imageUrl.product} />
+        <ProductCart image={imageUrl.product} />
+        <ProductCart image={imageUrl.product} />
+        <ProductCart image={imageUrl.product} />
+        <ProductCart image={imageUrl.product} />
+        <ProductCart image={imageUrl.product} />
+        <ProductCart image={imageUrl.product} />
+        <ProductCart image={imageUrl.product} />
+        <ProductCart image={imageUrl.product} />
+        <ProductCart image={imageUrl.product} />
+        <ProductCart image={imageUrl.product} />
+        <ProductCart image={imageUrl.product} />
+        <ProductCart image={imageUrl.product} />
+        <ProductCart image={imageUrl.product} />
+        <ProductCart image={imageUrl.product} />
       </motion.div>
     </section>
   )
