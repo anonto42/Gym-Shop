@@ -21,7 +21,7 @@ function ProductCart({
   image,
 }: ProductCartProps) {
   return (
-    <div className="w-full max-w-[280px] sm:max-w-[220px] md:max-w-[250px] lg:max-w-[300px] bg-white border border-gray-200 shadow-md rounded-md overflow-hidden flex flex-col relative transition-transform duration-300 hover:scale-105">
+    <div className="w-full max-w-[280px] sm:max-w-[220px] md:max-w-[250px] lg:max-w-[300px] bg-white border border-gray-200 shadow-md rounded-md overflow-hidden flex flex-col relative transition-transform duration-300 hover:scale-[1.1]">
       {/* Discount Badge */}
       <div className="absolute top-2 left-2 bg-[#F27D31] text-white text-xs font-semibold w-[38px] h-[24px] rounded-full flex items-center justify-center z-10">
         -{discount}%
