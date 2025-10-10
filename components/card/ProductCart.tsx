@@ -2,6 +2,7 @@
 import Image from "next/image";
 import { TbCurrencyTaka } from "react-icons/tb";
 import React from "react";
+import Link from "next/link";
 
 interface ProductCartProps {
   name?: string;
@@ -54,10 +55,12 @@ function ProductCart({
       </div>
 
       {/* Button */}
-      <div className="p-3 pt-0">
-        <button className="w-full bg-black text-white text-xs sm:text-sm py-2 rounded-md hover:bg-gray-800 transition">
-          View Details
-        </button>
+      <div className="p-3 pt-0 ">
+        <Link href={`/product/${name}`} className="cursor-pointer ">
+          <button className="w-full bg-black text-white text-xs sm:text-sm py-2 rounded-md hover:bg-gray-800 transition cursor-pointer active:scale-95 duration-100 ease-in">
+            View Details
+          </button>
+        </Link>
       </div>
     </div>
   );
