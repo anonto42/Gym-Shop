@@ -2,9 +2,9 @@
 import imageUrl from "@/const/imageUrl";
 import Image from "next/image";
 import React from "react";
-import { motion } from "framer-motion";
+import { motion, Variants } from "framer-motion";
 
-const cardVariants: any = {
+const cardVariants: Variants = {
     hidden: { opacity: 0, y: 50 },
     visible: (index: number) => ({
       opacity: 1,
