@@ -50,7 +50,7 @@ function ContactPage() {
       </section>
 
       {/* Section 3: Contact Form */}
-      <section className="w-[360px] md:max-w-[1000px] mx-auto px-6 py-20 bg-[#FEF2EA] rounded-3xl shadow">
+      <section className="max-w-[360px] md:max-w-[1000px] mx-auto px-6 py-20 bg-[#FEF2EA] rounded-3xl shadow">
         <h2 className="text-2xl md:text-3xl font-bold text-[#222] text-center mb-8">
           Send Us a Message
         </h2>
