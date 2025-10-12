@@ -29,7 +29,7 @@ export default function RootLayout({
       >
         <TopBar />
         <Navbar />
-        <main className="w-full h-full pt-[60px]">{children}</main>
+        <main className="w-full h-full pt-[55px]">{children}</main>
         <Footer />
       </body>
     </html>
