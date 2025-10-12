@@ -133,8 +133,8 @@ function PersonalTrainingPage() {
                 <h3 className="text-lg font-semibold text-center mb-4 w-[70%]">
                   {training.title}
                 </h3>
-                <button className="bg-[#F27D31] text-white font-semibold py-2 px-4 md:text-base rounded-full hover:bg-[#e36e20] transition cursor-pointer">
-                  Buy Now
+                <button className="bg-[#F27D31] text-white font-semibold py-2 px-4 text-sm rounded-full hover:bg-[#e36e20] transition cursor-pointer">
+                  Buy Package
                 </button>
               </div>
             </motion.div>
