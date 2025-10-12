@@ -1,13 +1,16 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import Link from "next/link";
 import { ShoppingCart, Search, Menu, X } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { usePathname } from "next/navigation";
+import TopBar from "./TopBar";
 
 const Navbar = () => {
   const [isOpen, setIsOpen] = useState(false);
+  const [showNav, setShowNav] = useState(true);
+  const [lastScrollY, setLastScrollY] = useState(0);
   const pathname = usePathname();
 
   const navLinks = [
@@ -19,9 +22,34 @@ const Navbar = () => {
     { name: "Contact Us", href: "/contact" },
   ];
 
+  // 🧠 Scroll detection logic
+  useEffect(() => {
+    const controlNavbar = () => {
+      if (window.scrollY > lastScrollY && window.scrollY > 100) {
+        // Scrolling down → hide navbar
+        setShowNav(false);
+      } else {
+        // Scrolling up → show navbar
+        setShowNav(true);
+      }
+      setLastScrollY(window.scrollY);
+    };
+
+    window.addEventListener("scroll", controlNavbar);
+    return () => {
+      window.removeEventListener("scroll", controlNavbar);
+    };
+  }, [lastScrollY]);
+
   return (
-    <div className="w-full bg-[#222222]">
-      <nav className=" py-3 px-6 shadow-md flex items-center justify-between max-w-[1540px] mx-auto">
+    <motion.div
+      className="w-full bg-[#222222] fixed top-0 left-0 z-50 shadow-md"
+      initial={{ y: 0 }}
+      animate={{ y: showNav ? 0 : -100 }}
+      transition={{ duration: 0.4, ease: "easeInOut" }}
+    >
+      <TopBar />
+      <nav className="py-3 px-6 flex items-center justify-between max-w-[1540px] mx-auto">
         {/* Logo */}
         <Link href="/" className="text-xl font-bold text-[#F27D31]">
           GymShop
@@ -152,7 +180,7 @@ const Navbar = () => {
           </motion.div>
         )}
       </AnimatePresence>
-    </div>
+    </motion.div>
   );
 };
 
