@@ -18,4 +18,11 @@ export default {
         image3: "https://res.cloudinary.com/ddsnont4o/image/upload/v1760026312/package3_vwsgds.png"
     },
 
+    about: {
+        1: "https://res.cloudinary.com/ddsnont4o/image/upload/v1760286143/about1_l9awj1.png",
+        2: "https://res.cloudinary.com/ddsnont4o/image/upload/v1760286203/about2_lvcmri.png",
+        3: "https://res.cloudinary.com/ddsnont4o/image/upload/v1760286319/about3_nz5l4i.png",
+        4: "https://res.cloudinary.com/ddsnont4o/image/upload/v1760286353/about4_ts3dqm.png"
+    }
+
 }
