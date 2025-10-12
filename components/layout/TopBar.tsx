@@ -9,9 +9,6 @@ const TopBar = () => {
       <div className=" text-white sm:text-xs text-[7px] py-2 px-4 flex justify-end items-center max-w-[1540px] mx-auto">
         {/* Left links */}
         <div className="flex gap-4">
-          <Link href="/contact-us" className="hover:underline border-r pr-3">
-            Contact Us
-          </Link>
           <Link href="/privacy-policy" className="hover:underline border-r pr-3">
             Privacy & Return Policy
           </Link>
