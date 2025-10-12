@@ -11,7 +11,7 @@ function ShopPage() {
   const [isFilterOpen, setIsFilterOpen] = useState(false);
 
   return (
-    <div className="w-full bg-white min-h-screen">
+    <div className="w-full bg-white min-h-screen pt-6 md:pt-0">
       <div className="w-full max-w-[1500px] mx-auto flex flex-col md:flex-row h-[100svh] overflow-hidden">
 
         {/* --- MOBILE TOP BAR --- */}
