@@ -7,8 +7,8 @@ import {signUpServerSide} from "@/server/functions/auth.fun";
 import {IError} from "@/server/interface/error.interface";
 import {ISignUpInput} from "@/server/interface/auth.interface";
 import {toast} from "sonner";
-import {IResponse} from "@/server/interface/Response.interface";
-import {isErrorResponse} from "@/server/helper/SendResponse.helper";
+import {IResponse} from "@/server/interface/response.interface";
+import {isErrorResponse} from "@/server/helper/sendResponse.helper";
 
 export default function SignUpContainer () {
 
