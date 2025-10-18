@@ -9,8 +9,12 @@ import {ISignUpInput} from "@/server/interface/auth.interface";
 import {toast} from "sonner";
 import {IResponse} from "@/server/interface/response.interface";
 import {isErrorResponse} from "@/server/helper/sendResponse.helper";
+import {useRouter} from "next/navigation";
 
 export default function SignUpContainer () {
+
+    // Navigator
+    const navigator = useRouter();
 
     // Stats
     const [loading, setLoading] = useState<boolean>(false);
@@ -63,6 +67,8 @@ export default function SignUpContainer () {
         toast.success('Account created successfully!', {
             description: 'Welcome to our platform!',
         });
+
+        navigator.push("/verify-opt")
 
         return user
     }
