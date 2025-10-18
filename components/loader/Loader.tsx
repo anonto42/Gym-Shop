@@ -23,7 +23,7 @@ const Loader: React.FC<LoaderProps> = ({message = 'Loading...', size = 'md', ove
     };
 
     return (
-        <div className={`fixed inset-0 z-[9999] flex items-center justify-center ${
+        <div className={`fixed inset-0 z-[9999] flex items-center justify-center cursor-wait ${
             overlay ? 'bg-black/5 bg-opacity-10 backdrop-blur-xs' : ''
         }`}>
             <div className="flex flex-col items-center justify-center space-y-4">
