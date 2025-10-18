@@ -7,6 +7,8 @@ import {signUpServerSide} from "@/server/functions/auth.fun";
 import {IError} from "@/server/interface/error.interface";
 import {ISignUpInput} from "@/server/interface/auth.interface";
 import {toast} from "sonner";
+import {IResponse} from "@/server/interface/Response.interface";
+import {isErrorResponse} from "@/server/helper/SendResponse.helper";
 
 export default function SignUpContainer () {
 
@@ -45,13 +47,18 @@ export default function SignUpContainer () {
         formData.append("password", password);
         formData.append("name", name);
 
+        const user: IUser | IResponse = await signUpServerSide(formData);
+
+        if (isErrorResponse(user)) {
+            toast.error(user.message);
+            return null;
+        }
+
+        setLoading(false);
+
         setName("");
         setEmail("");
         setPassword("");
-
-        const user = await signUpServerSide(formData);
-
-        setLoading(false);
 
         toast.success('Account created successfully!', {
             description: 'Welcome to our platform!',
