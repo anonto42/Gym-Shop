@@ -5,3 +5,8 @@ export interface ISignUpInput extends FormData {
     password: string;
     name: string;
 }
+
+export interface ISignInInput extends FormData {
+    email: string;
+    password: string;
+}
