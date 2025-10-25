@@ -10,10 +10,12 @@
   },
   "dependencies": {
     "@radix-ui/react-slot": "^1.2.3",
+    "@types/jsonwebtoken": "^9.0.10",
     "better-sqlite3": "^12.4.1",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
     "framer-motion": "^12.23.22",
+    "jsonwebtoken": "^9.0.2",
     "lucide-react": "^0.545.0",
     "mongoose": "^8.19.1",
     "next": "15.5.4",
