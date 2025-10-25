@@ -1,10 +1,9 @@
-import { model, Schema, Model } from "mongoose";
-import {IUser} from "@/server/models/user/user.interfce";
+import { model, Schema } from "mongoose";
+import {IUser, IUserModel} from "@/server/models/user/user.interfce";
 import {USER_ROLE} from "@/enum/user.enum";
+import {IResponse} from "@/server/interface/response.interface";
 
-let UserModel: Model<IUser>;
-
-const userSchema = new Schema<IUser>(
+const userSchema = new Schema<IUser, IUserModel>(
     {
         name: { type: String, required: true },
         image: { type: String, default: '' },
@@ -12,17 +11,24 @@ const userSchema = new Schema<IUser>(
         password: { type: String, required: true },
         isVerified: { type: Boolean, default: false },
         role: { type: String, enum: Object.values(USER_ROLE), default: USER_ROLE.USER },
+        otp: { type: String },
     }, {
         timestamps: true,
         versionKey: false
     }
 );
 
-// Create model only if it doesn't exist
-try {
-    UserModel = model<IUser>("User");
-} catch {
-    UserModel = model<IUser>("User", userSchema);
+userSchema.statics.isPasswordMac = async (email: string, password: string): Promise<boolean | IResponse> => {
+
+    const user = await UserModel.findOne({ email }).lean().exec();
+    if (!user) return { isError: true, status: 404, message: "Invalid email or password" };
+
+    return user.password === password;
 }
 
-export { UserModel };
+userSchema.statics.findUserByEmail = async (email: string): Promise<IUser | null> => {
+
+    return await UserModel.findOne({ email }).lean().exec();
+}
+
+export const UserModel = model<IUser,IUserModel>("User", userSchema);
