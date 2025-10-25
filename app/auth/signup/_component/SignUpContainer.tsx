@@ -55,6 +55,7 @@ export default function SignUpContainer () {
 
         if (isErrorResponse(user)) {
             toast.error(user.message);
+            setLoading(false);
             return null;
         }
 
