@@ -2,10 +2,10 @@
 import {Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle} from "@/components/ui/card";
 import {Button} from "@/components/ui/button";
 import {Dispatch, SetStateAction} from "react";
-import {router} from "next/client";
 import {IUser} from "@/server/models/user/user.interfce";
 import {IError} from "@/server/interface/error.interface";
 import Loader from "@/components/loader/Loader";
+import {AppRouterInstance} from "next/dist/shared/lib/app-router-context.shared-runtime";
 
 interface Props {
     signUp: () => Promise<IUser | null>;
@@ -17,6 +17,7 @@ interface Props {
     setPassword: Dispatch<SetStateAction<string>>;
     loading: boolean;
     error: IError;
+    router: AppRouterInstance
 }
 
 export default function SignUpPresenter ( props: Props ) {
@@ -31,6 +32,7 @@ export default function SignUpPresenter ( props: Props ) {
         setPassword,
         loading,
         error,
+        router
     } = props;
 
     return (
@@ -107,7 +109,7 @@ export default function SignUpPresenter ( props: Props ) {
                     <CardDescription className="text-center text-xs text-white">
                         Already have an account?{" "}
                         <span
-                            className="text-xs font-bold cursor-pointer underline"
+                            className="text-xs font-bold cursor-pointer underline active:scale-105"
                             onClick={() => router.push("/auth/signin")}
                         >
                           Log In

@@ -76,6 +76,7 @@ export default function SignUpContainer () {
 
     return <SignUpPresenter
         signUp={signUp}
+        router={navigator}
         name={name}
         email={email}
         password={password}
