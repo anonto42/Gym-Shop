@@ -45,8 +45,9 @@ export async function signInServerSide ( body: ISignInInput ): Promise<string | 
         const email = body.get("email") as string;
         const password = body.get("password") as string;
 
-        const user  = await UserModel.findUserByEmail(email);
+        const user: IUser  = await UserModel.findUserByEmail(email);
         if ( !user ) return SendResponse({ isError: true, status: 404, message: "Email was not exist!" });
+        if ( !user.isVerified ) return SendResponse({ isError: true, status: 401, message: "You are not verified!" });
 
         const response: boolean | { isError: boolean, status: number, message: string } = await UserModel.isPasswordMac(email,password);
         if( typeof response != "boolean" && response.isError == true ){
