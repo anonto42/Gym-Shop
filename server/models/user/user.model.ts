@@ -1,23 +1,55 @@
-import { model, Schema } from "mongoose";
+import {model, models, Schema} from "mongoose";
 import {IUser, IUserModel} from "@/server/models/user/user.interfce";
 import {USER_ROLE, USER_STATUS} from "@/enum/user.enum";
 import {IResponse} from "@/server/interface/response.interface";
 
 const userSchema = new Schema<IUser, IUserModel>(
     {
-        name: { type: String, required: true },
-        image: { type: String, default: '' },
-        email: { type: String, required: true },
-        password: { type: String, required: true },
-        status: { type: String, enum: Object.values(USER_STATUS), default: USER_STATUS.ACTIVE },
-        isVerified: { type: Boolean, default: false },
-        role: { type: String, enum: Object.values(USER_ROLE), default: USER_ROLE.USER },
-        otp: { type: String },
-    }, {
+        name: {
+            type: String,
+            required: [true, "Name is required"],
+            trim: true
+        },
+        image: {
+            type: String,
+            default: ''
+        },
+        email: {
+            type: String,
+            required: [true, "Email is required"],
+            unique: true,
+            lowercase: true,
+            trim: true
+        },
+        password: {
+            type: String,
+            required: [true, "Password is required"],
+            minlength: [6, "Password must be at least 6 characters"]
+        },
+        status: {
+            type: String,
+            enum: Object.values(USER_STATUS),
+            default: USER_STATUS.ACTIVE
+        },
+        isVerified: {
+            type: Boolean,
+            default: false
+        },
+        role: {
+            type: String,
+            enum: Object.values(USER_ROLE),
+            default: USER_ROLE.USER
+        },
+        otp: {
+            type: String
+        },
+    },
+    {
         timestamps: true,
         versionKey: false
     }
 );
+
 
 userSchema.statics.isPasswordMac = async (email: string, password: string): Promise<boolean | IResponse> => {
     const user = await UserModel.findOne({ email }).lean().exec();
@@ -34,4 +66,8 @@ userSchema.statics.findUserByEmailAndUpdate = async (email: string, updatedData:
     return await UserModel.findOneAndUpdate({ email },{ $set: updatedData },{ new: true }).lean().exec();
 }
 
-export const UserModel = model<IUser,IUserModel>("User", userSchema);
+export const UserModel: IUserModel = (
+    models.User
+        ? (models.User as unknown as IUserModel)
+        : model<IUser, IUserModel>("User", userSchema)
+);
