@@ -1,5 +1,6 @@
 "use server";
 
+import { cookies } from 'next/headers';
 import {UserModel} from "@/server/models/user/user.model";
 import {IUser} from "@/server/models/user/user.interfce";
 import {
@@ -229,13 +230,17 @@ export async function changePasswordServerSide ( body: IChangePasswordInput ): P
     }
 }
 
-export async function isAuthenticated(): Promise<boolean | JwtPayload> {
+export async function isAuthenticatedAndGetUser (): Promise<string | IResponse> {
 
-    const token = getCookie();
-    if (typeof token !== "string" && !token) return false;
+    const token = await getCookie();
+    if (token == null) return SendResponse({ isError: true, status: 404, message: "Token is missing!" });
 
-    const payload = verifyCookie(token);
-    if (typeof payload !== "string" ) return payload;
+    const payload: string | JwtPayload & { email: string } = await verifyCookie(token);
+    if (typeof payload == "string" ) return SendResponse({ isError: true, status: 404, message: "Token was not verified!" });
 
-    return false;
+    const user = await UserModel.findUserByEmail(payload.email);
+    if ( !user ) return SendResponse({isError: true, status: 404, message: "User not found!" });
+
+    return JSON.stringify(user);
+
 }
