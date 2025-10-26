@@ -10,3 +10,23 @@ export interface ISignInInput extends FormData {
     email: string;
     password: string;
 }
+
+export interface IForgotPasswordInput extends FormData {
+    email: string;
+}
+
+export interface IVerifyOtpInput extends FormData {
+    email: string;
+    otp: string;
+}
+
+export interface ISetPasswordInput extends FormData {
+    email: string;
+    token: string;
+    password: string;
+}
+
+export interface IChangePasswordInput extends FormData {
+    userToken: string;
+    password: string;
+}
