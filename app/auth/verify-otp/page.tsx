@@ -1,18 +1,42 @@
 "use client";
+
 import React, { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { useRouter } from "next/navigation";
+import {verifyOtpServerSide} from "@/server/functions/auth.fun";
+import {IVerifyOtpInput} from "@/server/interface/auth.interface";
+import { useSearchParams } from 'next/navigation';
+import Loader from "@/components/loader/Loader";
+import {toast} from "sonner";
+import {IResponse} from "@/server/interface/response.interface";
 
 const VerifyOtp = () => {
   const router = useRouter();
-  const [otp, setOtp] = useState("");
+  const params = useSearchParams();
+  const [loading, setLoading] = useState<boolean>(false);
+  const [otp, setOtp] = useState<string>("");
+  const email = params.get("email");
 
-  const handleVerify = () => {
+  const handleVerify = async () => {
+    setLoading(true);
     if (otp.length === 6) {
-      
-      console.log("OTP Verified:", otp);
-      router.push("/auth/set-password"); 
+
+      const fromData = new FormData() as FormData as IVerifyOtpInput;
+      fromData.append("otp", otp);
+      fromData.append("email", email!);
+
+      const response = await verifyOtpServerSide(fromData) as IResponse & { data: { token: string } };
+      if (response.isError){
+          toast.error(response.message);
+          setLoading(false);
+          return null;
+      }
+
+      toast.success(response.message);
+
+      setLoading(false);
+      router.push(`/auth/set-password?email=${email}&token=${response.data.token}`);
     } else {
       alert("Please enter a valid 6-digit OTP");
     }
@@ -20,6 +44,7 @@ const VerifyOtp = () => {
 
   return (
     <div className="flex items-center justify-center h-screen shadow-xl shadow-black">
+        { loading && <Loader size={"lg"} overlay={true} message={"Loading..."} /> }
       <Card className="w-[350px] h-auto border border-white backdrop-blur-3xl bg-white/20">
         <CardHeader className="text-center">
           <CardTitle className="text-2xl font-bold text-white">
