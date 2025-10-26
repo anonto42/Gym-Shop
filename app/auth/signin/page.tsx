@@ -21,6 +21,7 @@ const SignIn = () => {
 
   const handleSignIn = async () => {
       setLoading(true);
+      setError({field: null, message: null});
 
       if (!email) {
           setError({field: "email", message: "Email is required"});
@@ -61,7 +62,8 @@ const SignIn = () => {
 
   return (
     <div className='flex items-center justify-center h-screen shadow-xl shadow-black'>
-        { loading && <Loader size={"lg"} overlay={true} message={"Loading..."} /> }      <Card className='w-[350px] h-auto border border-white backdrop-blur-3xl bg-white/20'>
+        { loading && <Loader size={"lg"} overlay={true} message={"Loading..."} /> }
+        <Card className='w-[350px] h-auto border border-white backdrop-blur-3xl bg-white/20'>
         <CardHeader className='text-center'>
           <CardTitle className='text-2xl font-bold text-white'>Log In</CardTitle>
         </CardHeader>
