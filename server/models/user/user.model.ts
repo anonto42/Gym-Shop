@@ -53,7 +53,7 @@ const userSchema = new Schema<IUser, IUserModel>(
     }
 );
 
-userSchema.statics.isPasswordMatch = async function (
+userSchema.statics.isPasswordMac = async function (
     email: string,
     password: string
 ): Promise<boolean | IResponse> {
