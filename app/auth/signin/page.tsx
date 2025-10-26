@@ -55,7 +55,7 @@ const SignIn = () => {
           description: 'Welcome to our platform!',
       });
 
-      setCookie({ value: response });
+      await setCookie({ value: response });
 
       router.push('/');
   }
