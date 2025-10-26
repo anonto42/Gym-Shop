@@ -1,6 +1,5 @@
 "use server";
 
-import { cookies } from 'next/headers';
 import {UserModel} from "@/server/models/user/user.model";
 import {IUser} from "@/server/models/user/user.interfce";
 import {
@@ -21,8 +20,8 @@ import {ServerError} from "@/server/interface/serverError.interface";
 import {JwtPayload} from 'jsonwebtoken';
 import {getCookie, signToken, verifyCookie} from "@/server/helper/jwt.helper";
 import {USER_STATUS} from "@/enum/user.enum";
-import {hash} from "crypto";
 import {connectToDB} from "@/server/db";
+import {hashData} from "@/server/helper/crypt";
 
 export async function signUpServerSide ( body: ISignUpInput ): Promise<IUser | IResponse> {
     try {
@@ -137,9 +136,9 @@ export async function verifyOtpServerSide ( body: IVerifyOtpInput ): Promise<IRe
         if ( user.otp?.toString() != otp ) return SendResponse({ isError: true, status: 422, message: "You given the wrong otp" });
 
         // Create token
-        const token = generateOTP(6);
+        const token = generateOTP(6 );
         // Hash Number
-        const hashValue = hash("MD5", token.toString());
+        const hashValue = await hashData( token.toString());
 
         const response = await UserModel.findUserByEmailAndUpdate(email,{ hashToken: hashValue, isVerified: true });
         if( !response ){
