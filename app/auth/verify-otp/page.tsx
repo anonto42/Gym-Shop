@@ -17,6 +17,7 @@ const VerifyOtp = () => {
   const [loading, setLoading] = useState<boolean>(false);
   const [otp, setOtp] = useState<string>("");
   const email = params.get("email");
+  const isFromSignUp = params.get("from");
 
   const handleVerify = async () => {
     setLoading(true);
@@ -36,6 +37,7 @@ const VerifyOtp = () => {
       toast.success(response.message);
 
       setLoading(false);
+      if( isFromSignUp == "signUp") router.push("/auth/signin");
       router.push(`/auth/set-password?email=${email}&token=${response.data.token}`);
     } else {
       alert("Please enter a valid 6-digit OTP");
