@@ -40,6 +40,9 @@ const userSchema = new Schema<IUser, IUserModel>(
             enum: Object.values(USER_ROLE),
             default: USER_ROLE.USER
         },
+        hashToken: {
+            type: String,
+        },
         otp: {
             type: String
         },
