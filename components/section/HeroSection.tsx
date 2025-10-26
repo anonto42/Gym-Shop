@@ -1,6 +1,7 @@
 import imageUrl from '@/const/imageUrl';
 import Image from 'next/image';
 import React from 'react';
+import Link from "next/link";
 
 function HeroSection() {
   return (
@@ -13,9 +14,11 @@ function HeroSection() {
         <p className='text-sm md:text-base xl:text-xl'>
           typically refers to a project or assignment where a consulting firm or an independent consultant is hired to provide expert advice, guidance, or solutions for a specific business challenge,.
         </p>
-        <button className='bg-[#ffffff] text-black px-6 py-2 rounded-full hover:bg-[#FFD700] transition-colors duration-300 font-semibold'>
-          Shop Now
-        </button>
+        <Link href='/shop'>
+            <button className='bg-[#ffffff] cursor-pointer text-black px-6 py-2 rounded-full hover:bg-[#FFD700] transition-colors duration-300 font-semibold'>
+              Shop Now
+            </button>
+        </Link>
       </div>
 
       <div className='absolute bottom-4 md:right-0 md:bottom-0'>
