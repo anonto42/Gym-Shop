@@ -43,7 +43,7 @@ const ForgotPassword = () => {
     toast.success('OTP send on email!');
 
     setTimeout(() => {
-        router.push("/auth/verify-otp");
+        router.push(`/auth/verify-otp?email=${email}`);
     }, 800);
 
   };
