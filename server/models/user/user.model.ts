@@ -87,6 +87,12 @@ userSchema.statics.findUserByEmailAndUpdate = async function (
         .exec();
 };
 
-export const UserModel: IUserModel = (models.User
-    ? (models.User as unknown as IUserModel)
-    : model<IUser, IUserModel>("User", userSchema)) as IUserModel;
+let UserModel: IUserModel;
+
+if (typeof models !== 'undefined' && models.User) {
+    UserModel = models.User as unknown as IUserModel;
+} else {
+    UserModel = model<IUser, IUserModel>("User", userSchema);
+}
+
+export { UserModel };

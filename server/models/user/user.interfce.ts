@@ -13,7 +13,9 @@ export interface IUser {
     role: string;
     otp?: string;
     hashToken?: string;
-}
+    createdAt?: Date;
+    updatedAt?: Date;
+};
 
 export interface IUserModel extends Model<IUser>{
     isPasswordMac: (email: string,password: string) => boolean | { isError: boolean, status: number, message: string };
