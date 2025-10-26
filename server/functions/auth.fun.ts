@@ -23,10 +23,10 @@ import {getCookie, signToken, verifyCookie} from "@/server/helper/jwt.helper";
 import {USER_STATUS} from "@/enum/user.enum";
 import {hash} from "crypto";
 
-await connectToDB();
-
 export async function signUpServerSide ( body: ISignUpInput ): Promise<IUser | IResponse> {
     try {
+        await connectToDB();
+
         const name = body.get("name") as string;
         const email = body.get("email") as string;
         const password = body.get("password") as string;
@@ -52,6 +52,8 @@ export async function signUpServerSide ( body: ISignUpInput ): Promise<IUser | I
 
 export async function signInServerSide ( body: ISignInInput ): Promise<string | IResponse > {
     try {
+        await connectToDB();
+
         const email = body.get("email") as string;
         const password = body.get("password") as string;
 
@@ -93,11 +95,13 @@ export async function isAuthenticated(): Promise<boolean | JwtPayload> {
 
 export async function forgotPasswordServerSide ( body: IForgotPasswordInput ): Promise<IResponse> {
     try {
+        await connectToDB();
+
         const email = body.get("email") as string;
 
         const user: IUser  = await UserModel.findUserByEmail(email);
         if ( !user ) return SendResponse({ isError: true, status: 404, message: "Email was not exist!" });
-        if ( !user.isVerified ) return SendResponse({ isError: true, status: 401, message: "Your mail was not verified!" });
+        // if ( !user.isVerified ) return SendResponse({ isError: true, status: 401, message: "Your mail was not verified!" });
         if ( user.status == USER_STATUS.BLOCKED || user.status == USER_STATUS.DELETED ) return SendResponse({ isError: true, status: 423, message: `Your mail was ${user.status}!` });
 
         // Create OTP
@@ -131,6 +135,8 @@ export async function forgotPasswordServerSide ( body: IForgotPasswordInput ): P
 
 export async function verifyOtpServerSide ( body: IVerifyOtpInput ): Promise<IResponse> {
     try {
+        await connectToDB();
+
         const email = body.get("email") as string;
 
         const user: IUser  = await UserModel.findUserByEmail(email);
@@ -145,7 +151,7 @@ export async function verifyOtpServerSide ( body: IVerifyOtpInput ): Promise<IRe
         // Hash Number
         const hashValue = hash("aboriginal", token.toString());
 
-        const response = await UserModel.findUserByEmailAndUpdate(email,{ hashToken: hashValue });
+        const response = await UserModel.findUserByEmailAndUpdate(email,{ hashToken: hashValue, isVerified: true });
         if( !response ){
             return SendResponse({
                 isError: true,
@@ -168,6 +174,8 @@ export async function verifyOtpServerSide ( body: IVerifyOtpInput ): Promise<IRe
 
 export async function setPasswordServerSide ( body: ISetPasswordInput ): Promise<IResponse> {
     try {
+        await connectToDB();
+
         const email = body.get("email") as string;
 
         const user: IUser  = await UserModel.findUserByEmail(email);
@@ -199,6 +207,8 @@ export async function setPasswordServerSide ( body: ISetPasswordInput ): Promise
 
 export async function changePasswordServerSide ( body: IChangePasswordInput ): Promise<IResponse> {
     try {
+        await connectToDB();
+
         const payload = verifyCookie(body.userToken) as JwtPayload;
 
         const user: IUser  = await UserModel.findUserByEmail(payload.email);
