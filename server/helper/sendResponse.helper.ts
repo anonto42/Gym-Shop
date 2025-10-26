@@ -6,6 +6,7 @@ export function SendResponse ( props: Partial<IResponse>): IResponse {
         status: props.status ? props.status : 200,
         message: props.message ? props.message : "You request was processed successfully!",
         isError: props.isError ? true : false,
+        data: props.data,
     }
 }
 
