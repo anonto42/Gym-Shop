@@ -1,3 +1,5 @@
+import {JwtPayload, sign, verify} from "jsonwebtoken";
+import {StringValue} from "ms";
 
 export function setCookie({name = "GYM_Shop", value, days = 14}: {name?: string, value: string, days?: number}): void{
     const date = new Date();
@@ -15,4 +17,16 @@ export function getCookie(name: string = "GYM_Shop"): string | null {
         if (c.indexOf(nameEQ) === 0) return c.substring(nameEQ.length, c.length);
     }
     return null;
+}
+
+export function verifyCookie(token: string ): JwtPayload | string {
+    return verify(token,process.env.JWT_SECRET!)
+}
+
+export function signToken({ email, id, role}:{email: string, id: string, role: string}): string {
+    return sign({
+        email,
+        id,
+        role
+    }, process.env.JWT_SECRET as string,{ expiresIn: process.env.JWT_EXPIRY as StringValue });
 }
