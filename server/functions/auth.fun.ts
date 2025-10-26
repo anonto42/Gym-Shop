@@ -16,13 +16,13 @@ import {SendResponse} from "@/server/helper/sendResponse.helper";
 import {sendEmail} from "@/server/helper/emailSender.helper";
 import {GenerateCreateAccountHtml} from "@/server/helper/htmlCreate.helper";
 import {generateOTP} from "@/server/helper/generateOtp.helper";
-import connectToDB from "@/server/db";
 import {handleServerError} from "@/server/helper/ErrorHandler";
 import {ServerError} from "@/server/interface/serverError.interface";
 import {JwtPayload} from 'jsonwebtoken';
 import {getCookie, signToken, verifyCookie} from "@/server/helper/jwt.helper";
 import {USER_STATUS} from "@/enum/user.enum";
 import {hash} from "crypto";
+import {connectToDB} from "@/server/db";
 
 export async function signUpServerSide ( body: ISignUpInput ): Promise<IUser | IResponse> {
     try {
@@ -231,6 +231,8 @@ export async function changePasswordServerSide ( body: IChangePasswordInput ): P
 }
 
 export async function isAuthenticatedAndGetUser (): Promise<string | IResponse> {
+
+    await connectToDB();
 
     const token = await getCookie();
     if (token == null) return SendResponse({ isError: true, status: 404, message: "Token is missing!" });
