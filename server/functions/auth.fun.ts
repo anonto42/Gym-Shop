@@ -82,17 +82,6 @@ export async function signInServerSide ( body: ISignInInput ): Promise<string | 
     }
 }
 
-export async function isAuthenticated(): Promise<boolean | JwtPayload> {
-
-    const token = getCookie();
-    if (typeof token !== "string" && !token) return false;
-
-    const payload = verifyCookie(token);
-    if (typeof payload !== "string" ) return payload;
-
-    return false;
-}
-
 export async function forgotPasswordServerSide ( body: IForgotPasswordInput ): Promise<IResponse> {
     try {
         await connectToDB();
@@ -138,18 +127,18 @@ export async function verifyOtpServerSide ( body: IVerifyOtpInput ): Promise<IRe
         await connectToDB();
 
         const email = body.get("email") as string;
+        const otp = body.get("otp") as string;
 
         const user: IUser  = await UserModel.findUserByEmail(email);
         if ( !user ) return SendResponse({ isError: true, status: 404, message: "Email was not exist!" });
-        if ( !user.isVerified ) return SendResponse({ isError: true, status: 401, message: "Your mail was not verified!" });
+        // if ( !user.isVerified ) return SendResponse({ isError: true, status: 401, message: "Your mail was not verified!" });
         if ( user.status == USER_STATUS.BLOCKED || user.status == USER_STATUS.DELETED ) return SendResponse({ isError: true, status: 423, message: `Your mail was ${user.status}!` });
-
-        if ( user.otp?.toString() != body.otp.toString() ) return SendResponse({ isError: true, status: 422, message: "You given the wrong otp" });
+        if ( user.otp?.toString() != otp ) return SendResponse({ isError: true, status: 422, message: "You given the wrong otp" });
 
         // Create token
         const token = generateOTP(6);
         // Hash Number
-        const hashValue = hash("aboriginal", token.toString());
+        const hashValue = hash("MD5", token.toString());
 
         const response = await UserModel.findUserByEmailAndUpdate(email,{ hashToken: hashValue, isVerified: true });
         if( !response ){
@@ -177,15 +166,17 @@ export async function setPasswordServerSide ( body: ISetPasswordInput ): Promise
         await connectToDB();
 
         const email = body.get("email") as string;
+        const token = body.get("token") as string;
+        const password = body.get("password") as string;
 
         const user: IUser  = await UserModel.findUserByEmail(email);
         if ( !user ) return SendResponse({ isError: true, status: 404, message: "Email was not exist!" });
         if ( !user.isVerified ) return SendResponse({ isError: true, status: 401, message: "Your mail was not verified!" });
         if ( user.status == USER_STATUS.BLOCKED || user.status == USER_STATUS.DELETED ) return SendResponse({ isError: true, status: 423, message: `Your mail was ${user.status}!` });
 
-        if ( user.hashToken?.toString() !== body.token.toString() ) return SendResponse({ isError: true, status: 403, message: "Attempt to bypass security!" });
+        if ( user.hashToken?.toString() !== token ) return SendResponse({ isError: true, status: 403, message: "Attempt to bypass security!" });
 
-        const response = await UserModel.findUserByEmailAndUpdate(email,{ password: body.password });
+        const response = await UserModel.findUserByEmailAndUpdate(email,{ password, otp: "", hashToken: "" });
         if( !response ){
             return SendResponse({
                 isError: true,
@@ -204,6 +195,8 @@ export async function setPasswordServerSide ( body: ISetPasswordInput ): Promise
         return handleServerError(error);
     }
 }
+
+// Have to add later
 
 export async function changePasswordServerSide ( body: IChangePasswordInput ): Promise<IResponse> {
     try {
@@ -234,4 +227,15 @@ export async function changePasswordServerSide ( body: IChangePasswordInput ): P
     } catch (error : ServerError ) {
         return handleServerError(error);
     }
+}
+
+export async function isAuthenticated(): Promise<boolean | JwtPayload> {
+
+    const token = getCookie();
+    if (typeof token !== "string" && !token) return false;
+
+    const payload = verifyCookie(token);
+    if (typeof payload !== "string" ) return payload;
+
+    return false;
 }
