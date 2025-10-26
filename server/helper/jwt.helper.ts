@@ -1,29 +1,31 @@
+"use server";
+
 import {JwtPayload, sign, verify} from "jsonwebtoken";
 import {StringValue} from "ms";
+import { cookies } from 'next/headers';
 
-export function setCookie({name = "GYM_Shop", value, days = 14}: {name?: string, value: string, days?: number}): void{
-    const date = new Date();
-    date.setTime(date.getTime() + (days * 24 * 60 * 60 * 1000));
-    const expires = "expires=" + date.toUTCString();
-    document.cookie = `${name}=${value};${expires};path=/`;
+export async function setCookie({name = "GYM_Shop", value, maxAge = 12000 }: {name?: string, value: string, maxAge?: number}): Promise<void>{
+    const cookieStore = await cookies();
+    cookieStore.set(name, value, {
+        httpOnly: true,
+        secure: process.env.NODE_ENV === 'production',
+        maxAge,
+        path: '/',
+        sameSite: 'lax'
+    });
 }
 
-export function getCookie(name: string = "GYM_Shop"): string | null {
-    const nameEQ = name + "=";
-    const ca = document.cookie.split(';');
-    for (let i = 0; i < ca.length; i++) {
-        let c = ca[i];
-        while (c.charAt(0) === ' ') c = c.substring(1, c.length);
-        if (c.indexOf(nameEQ) === 0) return c.substring(nameEQ.length, c.length);
-    }
-    return null;
+export async function getCookie(name: string = "GYM_Shop"): Promise<string | null> {
+    const cookieStore = await cookies();
+    const token = cookieStore.get(name)?.value;
+    return token || null;
 }
 
-export function verifyCookie(token: string ): JwtPayload | string {
-    return verify(token,process.env.JWT_SECRET!)
+export async function verifyCookie(token: string ): Promise<JwtPayload & {email: string} | string> {
+    return await verify(token,process.env.JWT_SECRET!) as JwtPayload & {email: string} | string;
 }
 
-export function signToken({ email, id, role}:{email: string, id: string, role: string}): string {
+export async function signToken({ email, id, role}:{email: string, id: string, role: string}): Promise<string> {
     return sign({
         email,
         id,
