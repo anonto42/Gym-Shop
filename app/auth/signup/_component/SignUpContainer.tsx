@@ -69,7 +69,7 @@ export default function SignUpContainer () {
             description: 'Welcome to our platform!',
         });
 
-        navigator.push("/verify-opt")
+        navigator.push("/verify-opt?from=signUp")
 
         return user
     }
