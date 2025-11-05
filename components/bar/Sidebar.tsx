@@ -1,9 +1,8 @@
 "use client";
 import {Contact2, LogOut, Package2, User} from "lucide-react";
-import { useState } from "react";
 import { BiSolidOffer } from "react-icons/bi";
 import { FaTeamspeak } from "react-icons/fa";
-import { FcAbout } from "react-icons/fc";
+import { FcAbout, FcPrivacy } from "react-icons/fc";
 import { GrDashboard } from "react-icons/gr";
 import { MdProductionQuantityLimits } from "react-icons/md";
 import { PiFlagBanner } from "react-icons/pi";
@@ -48,6 +47,10 @@ export default function Sidebar ({activeTab, setActiveTab}: Props) {
         {
             title: "OurTeam",
             icon: FaTeamspeak
+        },
+        {
+            title: "PrivacyPolicy",
+            icon: FcPrivacy
         },
         {
             title: "Contact",
