@@ -33,11 +33,11 @@ export default function Sidebar ({activeTab, setActiveTab}: Props) {
             icon: MdProductionQuantityLimits
         },
         {
-            title: "PersonalTraining",
+            title: "Personal Training",
             icon: TbBrandBing
         },
         {
-            title: "PackageManagement",
+            title: "Package Management",
             icon: Package2
         },
         {
