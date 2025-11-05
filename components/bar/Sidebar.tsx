@@ -40,14 +40,14 @@ export default function Sidebar ({activeTab, setActiveTab}: Props) {
             title: "Package Management",
             icon: Package2
         },
-        {
-            title: "AboutMe",
-            icon: FcAbout
-        },
-        {
-            title: "OurTeam",
-            icon: FaTeamspeak
-        },
+        // {
+        //     title: "AboutMe",
+        //     icon: FcAbout
+        // },
+        // {
+        //     title: "OurTeam",
+        //     icon: FaTeamspeak
+        // },
         {
             title: "PrivacyPolicy",
             icon: FcPrivacy
