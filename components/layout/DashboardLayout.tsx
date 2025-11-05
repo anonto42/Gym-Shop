@@ -10,9 +10,9 @@ import PersonalTraining from "./PersonalTraining";
 import PackageManagement from "../tabs/PackageManagement";
 import AboutMe from "../tabs/AboutMe";
 import OurTeam from "../tabs/OurTeam";
-import { Contact } from "lucide-react";
 import UserTab from "../tabs/User";
 import PrivacyPolicy from "../tabs/PrivacyPolicy";
+import Contact from "../tabs/Contact";
 
 export default function DashboardLayout () {
 
