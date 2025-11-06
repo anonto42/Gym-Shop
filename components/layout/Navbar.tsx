@@ -6,12 +6,15 @@ import { ShoppingCart, Search, Menu, X } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { usePathname } from "next/navigation";
 import TopBar from "./TopBar";
+import { createAdminServerSide } from "@/server/functions/admin.fun";
 
 const Navbar = () => {
   const [isOpen, setIsOpen] = useState(false);
   const [showNav, setShowNav] = useState(true);
   const [lastScrollY, setLastScrollY] = useState(0);
   const pathname = usePathname();
+
+  async function createAdmin() { await createAdminServerSide(); }
 
   const navLinks = [
     { name: "Home", href: "/" },
@@ -21,6 +24,12 @@ const Navbar = () => {
     { name: "About Me", href: "/about" },
     { name: "Contact Us", href: "/contact" },
   ];
+
+  useEffect(() => {
+    ( async () => {
+      await createAdmin();
+    })();
+  }, []);
 
   useEffect(() => {
     const controlNavbar = () => {
@@ -37,6 +46,7 @@ const Navbar = () => {
       window.removeEventListener("scroll", controlNavbar);
     };
   }, [lastScrollY]);
+
 
   return (
     <motion.div
