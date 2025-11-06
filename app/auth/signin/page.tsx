@@ -7,7 +7,7 @@ import Link from 'next/link';
 import {signInServerSide} from "@/server/functions/auth.fun";
 import Loader from "@/components/loader/Loader";
 import {IError} from "@/server/interface/error.interface";
-import {ISignInInput, ISignUpInput} from "@/server/interface/auth.interface";
+import {ISignInInput} from "@/server/interface/auth.interface";
 import {isErrorResponse} from "@/server/helper/sendResponse.helper";
 import {toast} from "sonner";
 import {setCookie} from "@/server/helper/jwt.helper";
@@ -24,14 +24,14 @@ const SignIn = () => {
       setError({field: null, message: null});
 
       if (!email) {
-          setError({field: "email", message: "Email is required"});
-          setLoading(false);
-          return null;
+        setError({field: "email", message: "Email is required"});
+        setLoading(false);
+        return null;
       }
       if (!password) {
-          setError({field: "password", message: "Password is required"});
-          setLoading(false);
-          return null;
+        setError({field: "password", message: "Password is required"});
+        setLoading(false);
+        return null;
       }
 
       const formData = new FormData() as FormData & ISignInInput;
@@ -42,9 +42,9 @@ const SignIn = () => {
 
       const response = await signInServerSide(formData);
       if ( typeof response != "string" && isErrorResponse(response)) {
-          toast.error(response.message);
-          setLoading(false);
-          return null;
+        toast.error(response.message);
+        setLoading(false);
+        return null;
       }
 
       setLoading(false);
@@ -52,11 +52,12 @@ const SignIn = () => {
       setPassword("");
 
       toast.success('Login successfully!', {
-          description: 'Welcome to our platform!',
+        description: 'Welcome to our platform!',
       });
 
       await setCookie({ value: response });
 
+      router.refresh();
       router.push('/');
   }
 
