@@ -2,13 +2,12 @@
 import {Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle} from "@/components/ui/card";
 import {Button} from "@/components/ui/button";
 import {Dispatch, SetStateAction} from "react";
-import {IUser} from "@/server/models/user/user.interfce";
 import {IError} from "@/server/interface/error.interface";
 import Loader from "@/components/loader/Loader";
 import {AppRouterInstance} from "next/dist/shared/lib/app-router-context.shared-runtime";
 
 interface Props {
-    signUp: () => Promise<IUser | null>;
+    signUp: () => Promise<string | null>;
     email: string;
     setEmail: Dispatch<SetStateAction<string>>;
     name: string;

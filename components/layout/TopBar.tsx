@@ -1,6 +1,6 @@
 "use client";
 
-import React, {useEffect, useState} from "react";
+import React, {useLayoutEffect, useState} from "react";
 import Link from "next/link";
 import { UserCircle } from "lucide-react";
 import {isAuthenticatedAndGetUser} from "@/server/functions/auth.fun";
@@ -8,26 +8,26 @@ import {IUser} from "@/server/models/user/user.interfce";
 import {getCookie, setCookie} from "@/server/helper/jwt.helper";
 
 const TopBar = () => {
-    const [user, setUser] = useState<IUser | null>(null);
+  const [user, setUser] = useState<IUser | null>(null);
 
-    useEffect(() => {
-        ;( async ()=> {
-            const cookie = await getCookie("user");
-            if (typeof cookie == 'string' ) return setUser( JSON.parse(cookie) );
-            else {
-                const res = await isAuthenticatedAndGetUser();
-                if ( typeof res != "string" && res.isError == true) {
-                    console.log(res);
-                    setUser(null)
-                    return;
-                } else if ( typeof res == "string" ) {
-                    await setCookie({name:"user", value: res });
-                    setUser(JSON.parse(res));
-                    return;
-                }
-            }
-        })()
-    }, []);
+  useLayoutEffect(() => {
+    ;( async ()=> {
+        const cookie = await getCookie("user");
+        if (typeof cookie == 'string' ) return setUser( JSON.parse(cookie) );
+        else {
+          const res = await isAuthenticatedAndGetUser();
+          if ( typeof res != "string" && res.isError == true) {
+              console.log(res);
+              setUser(null)
+              return;
+          } else if ( typeof res == "string" ) {
+              await setCookie({name:"user", value: res });
+              setUser(JSON.parse(res));
+              return;
+          }
+        }
+    })()
+  }, []);
 
   return (
     <div className="w-full bg-[#222222]">

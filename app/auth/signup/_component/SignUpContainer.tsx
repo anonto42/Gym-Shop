@@ -24,7 +24,7 @@ export default function SignUpContainer () {
     const [password, setPassword] = useState<string>("");
 
     // Function
-    const signUp = async (): Promise<IUser | null> => {
+    const signUp = async (): Promise<string | null> => {
 
         setLoading(true);
 
@@ -71,7 +71,7 @@ export default function SignUpContainer () {
 
         navigator.push("/verify-opt?from=signUp")
 
-        return user
+        return JSON.stringify(user);
     }
 
     return <SignUpPresenter

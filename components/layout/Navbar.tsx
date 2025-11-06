@@ -22,14 +22,11 @@ const Navbar = () => {
     { name: "Contact Us", href: "/contact" },
   ];
 
-  // 🧠 Scroll detection logic
   useEffect(() => {
     const controlNavbar = () => {
       if (window.scrollY > lastScrollY && window.scrollY > 100) {
-        // Scrolling down → hide navbar
         setShowNav(false);
       } else {
-        // Scrolling up → show navbar
         setShowNav(true);
       }
       setLastScrollY(window.scrollY);
