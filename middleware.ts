@@ -12,7 +12,7 @@ export async function middleware(request: NextRequest) {
     return NextResponse.next();
   }
 
-  const token = request.cookies.get("GYM_Shop")?.value || null;
+  const token = request.cookies.get("user")?.value || null;
   if ((!token || token === "undefined" || token === "null") && (protectedRoutes.includes(path) || adminRoutes.includes(path))) {
     const loginUrl = new URL("/auth/signin", request.url);
     return NextResponse.redirect(loginUrl);
@@ -27,7 +27,7 @@ export async function middleware(request: NextRequest) {
     const loginUrl = new URL("/auth/signin", request.url);
     return NextResponse.redirect(loginUrl);
   }
-
+  
   if (user?.role !== USER_ROLE.ADMIN && adminRoutes.includes(path)) {
     const homeUrl = new URL("/", request.url);
     return NextResponse.redirect(homeUrl);
