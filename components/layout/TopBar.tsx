@@ -17,7 +17,6 @@ const TopBar = () => {
         else {
           const res = await isAuthenticatedAndGetUser();
           if ( typeof res != "string" && res.isError == true) {
-              console.log(res);
               setUser(null)
               return;
           } else if ( typeof res == "string" ) {
