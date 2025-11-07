@@ -30,3 +30,8 @@ export interface IChangePasswordInput extends FormData {
     userToken: string;
     password: string;
 }
+
+export interface IUpdateHeroSectionInput extends FormData {
+    title: string;
+    description: string; 
+}
