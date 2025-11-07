@@ -109,9 +109,9 @@ export async function updateHeroSectionImageServerSide(body: IUpdateHeroSectionI
     const imageUrl = cloudinaryResponse[0];
 
     // Update database
-    await SiteModle.findOneAndUpdate(
+    let res = await SiteModle.findOneAndUpdate(
       {},
-      { $set: { hero: { imageUrl } } },
+      { $set: { "hero.imageUrl": imageUrl } },
       { new: true, upsert: true }
     ).lean().exec();
 
