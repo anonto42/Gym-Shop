@@ -1,6 +1,7 @@
 import { Model } from "mongoose";
 
 export interface IOffer {
+    _id?: string;
     title: string;
     shortNote: string;
     promoCode: string;
