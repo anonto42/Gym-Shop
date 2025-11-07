@@ -1,12 +1,25 @@
 "use server";
 import { v2 as cloudinary } from 'cloudinary';
+import dotenv from "dotenv";
+dotenv.config({ path: ".env" });
 
-cloudinary.config({
-  cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
-  api_key: process.env.CLOUDINARY_API_KEY,
-  api_secret: process.env.CLOUDINARY_API_SECRET,
-})
+// Configuration
+const configureCloudinary = () => {
+  const cloudName = process.env.CLOUDINARY_CLOUD_NAME;
+  const apiKey = process.env.CLOUDINARY_API_KEY;
+  const apiSecret = process.env.CLOUDINARY_API_SECRE;
 
+  if (!cloudName || !apiKey || !apiSecret) throw new Error('Missing Cloudinary environment variables');
+
+  cloudinary.config({
+    cloud_name: cloudName,
+    api_key: apiKey,
+    api_secret: apiSecret,
+  });
+};
+
+// Initialize configuration
+configureCloudinary();
 
 export async function uploadMultipleToCloudinary(files: File[]): Promise<string[]> {
   try {
@@ -15,7 +28,11 @@ export async function uploadMultipleToCloudinary(files: File[]): Promise<string[
       return [];
     }
 
-    // Map over each file and upload using Cloudinary SDK
+    // Verify configuration
+    if (!process.env.CLOUDINARY_CLOUD_NAME || !process.env.CLOUDINARY_API_KEY || !process.env.CLOUDINARY_API_SECRE) {
+      throw new Error('Cloudinary configuration is missing');
+    }
+
     const uploadPromises = files.map(async (file) => {
       const arrayBuffer = await file.arrayBuffer();
       const buffer = Buffer.from(arrayBuffer);
@@ -25,26 +42,25 @@ export async function uploadMultipleToCloudinary(files: File[]): Promise<string[
           {
             folder: "gym-shop",
             resource_type: "auto",
-            // transformation: [
-            //   { width: 800, height: 800, crop: "limit" },
-            // ],
           },
           (error, result) => {
-            if (error) reject(error);
-            else resolve(result?.secure_url || "");
+            if (error) {
+              console.error('Cloudinary upload error:', error);
+              reject(error);
+            } else {
+              resolve(result?.secure_url || "");
+            }
           }
         );
         uploadStream.end(buffer);
       });
     });
 
-    // Wait for all uploads to finish
     const uploadedUrls = await Promise.all(uploadPromises);
-
-    // Filter out any empty strings (failed uploads)
     return uploadedUrls.filter((url) => url !== "");
+    
   } catch (error) {
     console.error("Error uploading multiple files:", error);
-    return [];
+    throw error;
   }
 }
