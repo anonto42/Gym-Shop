@@ -41,33 +41,31 @@ export async function createAdminServerSide(){
 }
 
 export async function editeHeroSectionServerSide ( body: IUpdateHeroSectionInput ): Promise<IResponse> {
-    try {
-        await connectToDB();
+  try {
+    await connectToDB();
 
-        const title = body.get("title") as string;
-        const description = body.get("description") as string;
+    const title = body.get("title") as string;
+    const description = body.get("description") as string;
 
-        let res = await SiteModle.findOneAndUpdate({},{ $set: {
-            hero: {
-                title,
-                description
-            }
-        }}, { new: true}).lean().exec();
+    let res = await SiteModle.findOneAndUpdate({},{ $set: {
+      "hero.title":title,
+      "hero.description":description
+    }}, { new: true}).lean().exec();
 
-        if ( !res ) {
-            res = await SiteModle.create({
-                hero: {
-                    title,
-                    description
-                }
-            })
+    if ( !res ) {
+      res = await SiteModle.create({
+        hero: {
+            title,
+            description
         }
-
-        return SendResponse({ isError: false, status: 200, message: "Hero section updated successfully!" });
-
-    } catch (error : ServerError ) {
-        return handleServerError(error);
+      })
     }
+
+    return SendResponse({ isError: false, status: 200, message: "Hero section updated successfully!" });
+
+  } catch (error : ServerError ) {
+    return handleServerError(error);
+  }
 }
 
 export async function getHeroSectionServerSide (): Promise<IResponse<ISite>> {
@@ -109,7 +107,7 @@ export async function updateHeroSectionImageServerSide(body: IUpdateHeroSectionI
     const imageUrl = cloudinaryResponse[0];
 
     // Update database
-    let res = await SiteModle.findOneAndUpdate(
+    await SiteModle.findOneAndUpdate(
       {},
       { $set: { "hero.imageUrl": imageUrl } },
       { new: true, upsert: true }
