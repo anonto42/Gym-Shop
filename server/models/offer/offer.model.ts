@@ -11,6 +11,29 @@ const offerSchema = new Schema<IOffer>({
     isActive: { type: Boolean, required: true },
 },{ timestamps: true });
 
+offerSchema.index({ promoCode: 1 });
+offerSchema.index({ startDate: 1, endDate: 1 });
+offerSchema.index({ isActive: 1 });
+
+offerSchema.statics.findActiveOffers = async function(): Promise<IOffer[]> {
+  const now = new Date();
+  return this.find({
+    isActive: true,
+    startDate: { $lte: now },
+    endDate: { $gte: now }
+  }).sort({ createdAt: -1 }).exec();
+};
+
+offerSchema.statics.validatePromoCode = async function(promoCode: string): Promise<IOffer | null> {
+  const now = new Date();
+  return this.findOne({
+    promoCode: promoCode.toUpperCase(),
+    isActive: true,
+    startDate: { $lte: now },
+    endDate: { $gte: now }
+  }).exec();
+};
+
 let OfferModel: IOfferModel;
 
 if (typeof models !== 'undefined' && models.Offer) {

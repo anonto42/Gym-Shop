@@ -10,4 +10,7 @@ export interface IOffer {
     isActive: boolean;
 }
 
-export interface IOfferModel extends Model<IOffer> {}
+export interface IOfferModel extends Model<IOffer> {
+    findActiveOffers(): Promise<IOffer[]>;
+    validatePromoCode(promoCode: string): Promise<IOffer | null>;
+}
