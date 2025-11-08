@@ -1,5 +1,5 @@
 "use client";
-import {Contact2, LogOut, Package2, User} from "lucide-react";
+import { Contact2, LogOut, MessageCircle, Package2, User } from "lucide-react";
 import { BiSolidOffer } from "react-icons/bi";
 import { FaTeamspeak } from "react-icons/fa";
 import { FcAbout, FcPrivacy } from "react-icons/fc";
@@ -7,82 +7,85 @@ import { GrDashboard } from "react-icons/gr";
 import { MdProductionQuantityLimits } from "react-icons/md";
 import { PiFlagBanner } from "react-icons/pi";
 import { TbBrandBing } from "react-icons/tb";
+import { useMemo } from "react";
 
 interface Props {
     activeTab: string;
     setActiveTab: (tab: string) => void;
 }
 
-export default function Sidebar ({activeTab, setActiveTab}: Props) {
+// Memoize the icon components with consistent sizing
+const createIconComponent = (IconComponent: React.ComponentType<any>, size = 18) => (
+    <IconComponent size={size} />
+);
 
-    const tabs = [
+export default function Sidebar({ activeTab, setActiveTab }: Props) {
+    const tabs = useMemo(() => [
         {
             title: "Overview",
-            icon: GrDashboard
+            icon: () => createIconComponent(GrDashboard)
         },
         {
             title: "Hero",
-            icon: PiFlagBanner
+            icon: () => createIconComponent(PiFlagBanner)
         },
         {
             title: "Offer",
-            icon: BiSolidOffer
+            icon: () => createIconComponent(BiSolidOffer)
         },
         {
             title: "Products",
-            icon: MdProductionQuantityLimits
+            icon: () => createIconComponent(MdProductionQuantityLimits)
         },
         {
             title: "Personal Training",
-            icon: TbBrandBing
+            icon: () => createIconComponent(TbBrandBing)
         },
         {
             title: "Package Management",
-            icon: Package2
+            icon: () => createIconComponent(Package2)
         },
-        // {
-        //     title: "AboutMe",
-        //     icon: FcAbout
-        // },
-        // {
-        //     title: "OurTeam",
-        //     icon: FaTeamspeak
-        // },
+        {
+            title: "Banner Message",
+            icon: () => createIconComponent(MessageCircle)
+        },
         {
             title: "PrivacyPolicy",
-            icon: FcPrivacy
+            icon: () => createIconComponent(FcPrivacy)
         },
         {
             title: "Contact",
-            icon: Contact2
+            icon: () => createIconComponent(Contact2)
         },
         {
             title: "User",
-            icon: User
+            icon: () => createIconComponent(User)
         },
-    ]
+    ], []);
 
     return (
-        <div className={"w-[400px] h-full flex justify-center items-center relative"}>
+        <div className="w-[400px] h-full flex justify-center items-center relative">
             <div className="w-[230px] md:w-[260px] xl:w-[300px] h-[95%] bg-white rounded-3xl relative flex flex-col items-end pt-[16px]">
-                {
-                    tabs.map((Item, index) => (
-                        <div
-                            key={index}
-                            onClick={() => setActiveTab(Item.title)}
-                            className={ Item.title == activeTab ? `text-white h-[50px] w-[95%] rounded-bl-full rounded-tl-full bg-[#125BAC] flex justify-start items-center gap-2 pl-4 cursor-pointer duration-200 ease-in-out` : `text-[#125BAC] h-[50px] w-[95%] rounded-bl-full rounded-tl-full flex justify-start items-center gap-2 pl-4 cursor-pointer duration-200 ease-in-out` }
-                        >
-                            <Item.icon />
-                            <span className="font-bold text-sm">{Item.title}</span>
-                        </div>
-                    ))
-                }
+                {tabs.map((Item, index) => (
+                    <button
+                        key={Item.title}
+                        onClick={() => setActiveTab(Item.title)}
+                        className={`h-[50px] w-[95%] rounded-bl-full rounded-tl-full flex justify-start items-center gap-2 pl-4 cursor-pointer duration-200 ease-in-out ${
+                            Item.title === activeTab 
+                                ? 'text-white bg-[#125BAC]' 
+                                : 'text-[#125BAC] hover:bg-blue-50'
+                        }`}
+                    >
+                        <Item.icon />
+                        <span className="font-bold text-sm">{Item.title}</span>
+                    </button>
+                ))}
             </div>
             {/* Logout button */}
-            <div className={"absolute cursor-pointer bottom-9 left-9 text-[#125BAC] flex gap-2"}>
-                <LogOut />
-                <span>Logout</span>
-            </div>
+            <button className="absolute cursor-pointer bottom-9 left-9 text-[#125BAC] flex gap-2 items-center hover:text-blue-700 duration-200">
+                <LogOut size={18} />
+                <span className="font-medium">Logout</span>
+            </button>
         </div>
-    )
+    );
 }
