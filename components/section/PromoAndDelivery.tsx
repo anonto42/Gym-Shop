@@ -50,6 +50,34 @@ function PromoAndDelivery() {
     });
   };
 
+  // Dynamic grid class based on number of offers
+  const getGridClass = () => {
+    const count = activeOffers.length;
+    
+    if (count === 1) {
+      return "flex justify-center"; // Single offer - center it
+    } else if (count === 2) {
+      return "grid grid-cols-1 md:grid-cols-2 gap-6 max-w-4xl mx-auto"; // 2 offers side by side
+    } else if (count === 3) {
+      return "grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 max-w-6xl mx-auto"; // 3 offers in triangle
+    } else {
+      return "grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 max-w-7xl mx-auto"; // 4+ offers in grid
+    }
+  };
+
+  // Dynamic card width based on number of offers
+  const getCardWidth = () => {
+    const count = activeOffers.length;
+    
+    if (count === 1) {
+      return "w-full max-w-md"; // Single offer - medium width
+    } else if (count === 2) {
+      return "w-full"; // 2 offers - full width of grid column
+    } else {
+      return "w-full"; // 3+ offers - full width of grid column
+    }
+  };
+
   return (
     <section className='bg-white pb-20 px-4 sm:px-6 md:px-12 lg:px-20 flex flex-col items-center gap-12'>
       <motion.div
@@ -83,7 +111,7 @@ function PromoAndDelivery() {
         </motion.div>
       ) : (
         <motion.div
-          className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 sm:gap-6 w-full max-w-7xl mx-auto"
+          className={getGridClass()}
           initial="hidden"
           whileInView="visible"
           viewport={{ once: true }}
@@ -91,9 +119,9 @@ function PromoAndDelivery() {
           {activeOffers.map((offer, index) => (
             <motion.div
               key={offer._id as string}
-              className="min-h-[280px] rounded-xl text-white shadow-lg shadow-black/20 p-4 sm:p-6 flex flex-col justify-between relative overflow-hidden group"
+              className={`min-h-[280px] rounded-xl text-white shadow-lg shadow-black/20 p-4 sm:p-6 flex flex-col justify-between relative overflow-hidden group ${getCardWidth()}`}
               whileHover={{ 
-                scale: 1.02,
+                scale: activeOffers.length <= 3 ? 1.05 : 1.02, // Bigger scale for fewer cards
                 boxShadow: "0 20px 25px -5px rgba(0, 0, 0, 0.3)"
               }}
               initial={{ opacity: 0, y: 30 }}
@@ -131,22 +159,23 @@ function PromoAndDelivery() {
                 </div>
               </div>
 
-              {/* Offer Content - Flexible height */}
+              {/* Offer Content */}
               <div className="flex-1 flex flex-col justify-center space-y-3 mb-4">
-                {/* Title with dynamic font size */}
-                <h3 className="text-lg sm:text-xl md:text-2xl font-bold leading-tight line-clamp-2 min-h-[3rem] flex items-center justify-center">
+                <h3 className={`font-bold leading-tight line-clamp-2 min-h-[3rem] flex items-center justify-center text-center ${
+                  activeOffers.length === 1 ? 'text-2xl sm:text-3xl' : 
+                  activeOffers.length === 2 ? 'text-xl sm:text-2xl' : 
+                  'text-lg sm:text-xl'
+                }`}>
                   {offer.title}
                 </h3>
                 
-                {/* Description */}
-                <p className="text-xs sm:text-sm opacity-90 line-clamp-3 min-h-[3.5rem] flex items-center">
+                <p className="text-xs sm:text-sm opacity-90 line-clamp-3 min-h-[3.5rem] flex items-center text-center">
                   {offer.shortNote}
                 </p>
                 
-                {/* Promo Code */}
                 <div className="mt-2 sm:mt-3">
-                  <p className="text-xs sm:text-sm mb-1 sm:mb-2">Use Promo Code:</p>
-                  <div className="bg-white/25 rounded-lg py-2 px-3 sm:px-4 inline-block max-w-full">
+                  <p className="text-xs sm:text-sm mb-1 sm:mb-2 text-center">Use Promo Code:</p>
+                  <div className="bg-white/25 rounded-lg py-2 px-3 sm:px-4 inline-block max-w-full mx-auto flex justify-center">
                     <span className="font-mono text-base sm:text-lg font-bold tracking-wider break-all">
                       {offer.promoCode}
                     </span>
@@ -175,7 +204,7 @@ function PromoAndDelivery() {
         </motion.div>
       )}
 
-      {/* Free Delivery Banner - Always show if there are offers */}
+      {/* Free Delivery Banner */}
       {activeOffers.length > 0 && (
         <motion.div
           className="w-full max-w-4xl mt-8"
