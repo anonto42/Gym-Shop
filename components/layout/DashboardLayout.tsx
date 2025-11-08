@@ -2,6 +2,7 @@
 import { lazy, useState } from "react";
 import Navbar from "../bar/Navbar";
 import Sidebar from "../bar/Sidebar";
+import BannerManagement from "../tabs/BannerMessage";
 
 // Lazy load the tabs
 const OverviewTab = lazy(() => import("../tabs/Overview"));
@@ -33,6 +34,7 @@ export default function DashboardLayout () {
                         activeTab == "Products" ? <Products /> :
                         activeTab == "Personal Training" ? <PersonalTraining /> :
                         activeTab == "Package Management" ? <PackageManagement /> :
+                        activeTab == "Banner Message" ? <BannerManagement /> :
                         activeTab == "AboutMe" ? <AboutMe /> :
                         activeTab == "OurTeam" ? <OurTeam /> :
                         activeTab == "Contact" ? <Contact /> :
