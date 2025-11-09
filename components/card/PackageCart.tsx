@@ -34,8 +34,6 @@ const PackageCart: React.FC<ICardProps> = ({
   const formattedPrice = price.toFixed(2);
   const formattedOriginalPrice = originalPrice?.toFixed(2);
 
-  console.log("log from the package cart: _->> ",image)
-
   return (
     <motion.div
       initial={{ opacity: 0, y: 40 }}
