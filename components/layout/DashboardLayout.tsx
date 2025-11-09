@@ -1,10 +1,10 @@
 "use client";
-import { lazy, useState } from "react";
+import { lazy, useState, Suspense } from "react";
 import Navbar from "../bar/Navbar";
 import Sidebar from "../bar/Sidebar";
 import BannerManagement from "../tabs/BannerMessage";
+import Loader from "../loader/Loader";
 
-// Lazy load the tabs
 const OverviewTab = lazy(() => import("../tabs/Overview"));
 const Hero = lazy(() => import("../tabs/Hero"));
 const Offer = lazy(() => import("../tabs/Offer"));
@@ -17,33 +17,38 @@ const UserTab = lazy(() => import("../tabs/User"));
 const PrivacyPolicy = lazy(() => import("../tabs/PrivacyPolicy"));
 const Contact = lazy(() => import("../tabs/Contact"));
 
-export default function DashboardLayout () {
-
+export default function DashboardLayout() {
     const [activeTab, setActiveTab] = useState<string>("Overview");
+
+    const renderTabContent = () => {
+        switch (activeTab) {
+            case "Overview": return <OverviewTab />;
+            case "Hero": return <Hero />;
+            case "Offer": return <Offer />;
+            case "Products": return <Products />;
+            case "Personal Training": return <PersonalTraining />;
+            case "Package Management": return <PackageManagement />;
+            case "Banner Message": return <BannerManagement />;
+            case "AboutMe": return <AboutMe />;
+            case "OurTeam": return <OurTeam />;
+            case "Contact": return <Contact />;
+            case "User": return <UserTab />;
+            case "PrivacyPolicy": return <PrivacyPolicy />;
+            default: return <h1>Not Found</h1>;
+        }
+    };
 
     return (
         <main className={"w-full h-[88vh]"}>
             <Navbar />
             <div className={"w-full h-full flex"}>
-                <Sidebar activeTab={activeTab} setActiveTab={setActiveTab}/>
+                <Sidebar activeTab={activeTab} setActiveTab={setActiveTab} />
                 <div className={"w-full h-full overflow-auto"}>
-                    { 
-                        activeTab == "Overview" ? <OverviewTab /> :
-                        activeTab == "Hero" ? <Hero /> :
-                        activeTab == "Offer" ? <Offer /> :
-                        activeTab == "Products" ? <Products /> :
-                        activeTab == "Personal Training" ? <PersonalTraining /> :
-                        activeTab == "Package Management" ? <PackageManagement /> :
-                        activeTab == "Banner Message" ? <BannerManagement /> :
-                        activeTab == "AboutMe" ? <AboutMe /> :
-                        activeTab == "OurTeam" ? <OurTeam /> :
-                        activeTab == "Contact" ? <Contact /> :
-                        activeTab == "User" ? <UserTab /> :
-                        activeTab == "PrivacyPolicy" ? <PrivacyPolicy /> :
-                        <h1>Not Found</h1> 
-                    }
+                    <Suspense fallback={<Loader overlay size="md" key={Math.random()} message="Loading..." />}>
+                        {renderTabContent()}
+                    </Suspense>
                 </div>
             </div>
         </main>
-    )
+    );
 }
