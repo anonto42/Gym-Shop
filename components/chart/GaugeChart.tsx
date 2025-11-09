@@ -1,5 +1,6 @@
 import React from "react";
 import { Doughnut } from "react-chartjs-2";
+import type { TooltipItem } from 'chart.js';
 import {
     Chart as ChartJS,
     ArcElement,
@@ -52,7 +53,7 @@ const GaugeChart: React.FC<GaugeChartProps> = ({
             tooltip: {
                 enabled: true,
                 callbacks: {
-                    label: (context: any) => {
+                    label: (context: TooltipItem<'doughnut'>) => {
                         return `${label}: ${context.parsed} (${percentage.toFixed(1)}%)`;
                     }
                 }

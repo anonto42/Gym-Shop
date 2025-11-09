@@ -12,7 +12,7 @@ import {
   deleteBannerMessageServerSide,
   reorderBannerMessagesServerSide 
 } from '@/server/functions/banner.fun';
-import { DragDropContext, Droppable, Draggable } from '@hello-pangea/dnd';
+import { DragDropContext, Droppable, Draggable, DropResult, DraggableProvided, DroppableProvided } from '@hello-pangea/dnd';
 import { GripVertical, Trash2, Edit, Save, X } from 'lucide-react';
 
 interface BannerMessage {
@@ -41,7 +41,7 @@ function BannerManagement() {
       if (!response.isError && response.data) {
         setMessages(response.data.messages || []);
       }
-    } catch (error) {
+    } catch {
       toast.error('Failed to fetch banner messages');
     } finally {
       setLoading(false);
@@ -64,7 +64,7 @@ function BannerManagement() {
         setNewMessage({ text: '', icon: '🔹' });
         fetchMessages();
       }
-    } catch (error) {
+    } catch {
       toast.error('Failed to create message');
     } finally {
       setLoading(false);
@@ -80,7 +80,7 @@ function BannerManagement() {
         toast.success('Message status updated');
         fetchMessages();
       }
-    } catch (error) {
+    } catch {
       toast.error('Failed to update message status');
     }
   };
@@ -106,7 +106,7 @@ function BannerManagement() {
         setEditText('');
         fetchMessages();
       }
-    } catch (error) {
+    } catch {
       toast.error('Failed to update message');
     }
   };
@@ -122,12 +122,12 @@ function BannerManagement() {
         toast.success('Message deleted successfully');
         fetchMessages();
       }
-    } catch (error) {
+    } catch {
       toast.error('Failed to delete message');
     }
   };
 
-  const onDragEnd = async (result: any) => {
+  const onDragEnd = async (result: DropResult) => {
     if (!result.destination) return;
 
     const items = Array.from(messages);
@@ -141,7 +141,7 @@ function BannerManagement() {
       const orderedIds = items.map(item => item._id);
       await reorderBannerMessagesServerSide(orderedIds);
       toast.success('Order updated successfully');
-    } catch (error) {
+    } catch {
       toast.error('Failed to update order');
       fetchMessages(); // Revert on error
     }
@@ -206,11 +206,11 @@ function BannerManagement() {
           ) : (
             <DragDropContext onDragEnd={onDragEnd}>
               <Droppable droppableId="banner-messages">
-                {(provided) => (
+                {(provided: DroppableProvided) => (
                   <div {...provided.droppableProps} ref={provided.innerRef} className="space-y-3">
                     {messages.map((message, index) => (
                       <Draggable key={message._id} draggableId={message._id} index={index}>
-                        {(provided) => (
+                        {(provided: DraggableProvided) => (
                           <div
                             ref={provided.innerRef}
                             {...provided.draggableProps}

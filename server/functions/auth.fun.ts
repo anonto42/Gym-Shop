@@ -16,7 +16,6 @@ import {sendEmail} from "@/server/helper/emailSender.helper";
 import {GenerateCreateAccountHtml} from "@/server/helper/htmlCreate.helper";
 import {generateOTP} from "@/server/helper/generateOtp.helper";
 import {handleServerError} from "@/server/helper/ErrorHandler";
-import {ServerError} from "@/server/interface/serverError.interface";
 import {JwtPayload} from 'jsonwebtoken';
 import {getCookie, signToken, verifyCookie} from "@/server/helper/jwt.helper";
 import {USER_STATUS} from "@/enum/user.enum";
@@ -45,7 +44,7 @@ export async function signUpServerSide ( body: ISignUpInput ): Promise<IUser | I
         const newUser = await UserModel.create({name, email, password, otp});
 
         return  newUser;
-    } catch (error : ServerError ) {
+    } catch (error) {
         return handleServerError(error);
     }
 }
@@ -77,7 +76,7 @@ export async function signInServerSide ( body: ISignInInput ): Promise<string | 
             role: user.role
         });
 
-    } catch (error : ServerError ) {
+    } catch (error ) {
         return handleServerError(error);
     }
 }
@@ -117,7 +116,7 @@ export async function forgotPasswordServerSide ( body: IForgotPasswordInput ): P
             message: "Forgot Password OTP Send Successfully!"
         });
 
-    } catch (error : ServerError ) {
+    } catch (error ) {
         return handleServerError(error);
     }
 }
@@ -156,7 +155,7 @@ export async function verifyOtpServerSide ( body: IVerifyOtpInput ): Promise<IRe
             data: { token: hashValue }
         });
 
-    } catch (error : ServerError ) {
+    } catch (error ) {
         return handleServerError(error);
     }
 }
@@ -191,12 +190,10 @@ export async function setPasswordServerSide ( body: ISetPasswordInput ): Promise
             message: "Successfully Changed Password!"
         });
 
-    } catch (error : ServerError ) {
+    } catch (error ) {
         return handleServerError(error);
     }
 }
-
-// Have to add later
 
 export async function changePasswordServerSide ( body: IChangePasswordInput ): Promise<IResponse> {
     try {
@@ -224,7 +221,7 @@ export async function changePasswordServerSide ( body: IChangePasswordInput ): P
             message: "Successfully Changed Password!"
         });
 
-    } catch (error : ServerError ) {
+    } catch (error ) {
         return handleServerError(error);
     }
 }
@@ -243,5 +240,4 @@ export async function isAuthenticatedAndGetUser (): Promise<string | IResponse> 
     if ( !user ) return SendResponse({isError: true, status: 404, message: "User not found!" });
 
     return JSON.stringify(user);
-
 }

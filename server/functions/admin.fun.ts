@@ -70,15 +70,20 @@ export async function editeHeroSectionServerSide ( body: IUpdateHeroSectionInput
   }
 }
 
-export async function getHeroSectionServerSide (): Promise<IResponse<ISite>> {
-    try {
-        await connectToDB();
-        let res = await SiteModle.findOne({}).lean().exec();
-        return SendResponse({ isError: false, status: 200, message: "Get Hero section successfully!",data: res as ISite });
+export async function getHeroSectionServerSide(): Promise<IResponse> {
+  try {
+    await connectToDB();
+    const res = await SiteModle.findOne({}).lean().exec() as ISite;
+    return SendResponse({ 
+        isError: false, 
+        status: 200, 
+        message: "Get Hero section successfully!", 
+        data: res 
+    });
 
-    } catch (error : ServerError ) {
-        return handleServerError(error);
-    }
+  } catch (error: ServerError) {
+    return handleServerError(error);
+  }
 }
 
 export async function updateHeroSectionImageServerSide(body: IUpdateHeroSectionImageInput): Promise<IResponse> {
@@ -122,7 +127,7 @@ export async function updateHeroSectionImageServerSide(body: IUpdateHeroSectionI
       data: { imageUrl }
     });
 
-  } catch (error: any) {
+  } catch (error) {
     console.error("Error in updateHeroSectionImageServerSide:", error);
     return handleServerError(error);
   }
@@ -294,7 +299,23 @@ export async function updateOfferServerSide(offerId: string, body: IUpdateOfferI
       };
     }
 
-    const updateData: any = {};
+    const updateData: {
+      title: string;
+      shortNote: string;
+      promoCode: string;
+      discount: number;
+      startDate: Date;
+      endDate: Date;
+      isActive: boolean;
+    } = {
+      title: "",
+      shortNote: "",
+      promoCode: "",
+      discount: 0,
+      startDate: new Date(),
+      endDate: new Date,
+      isActive: false
+    };
     if (title) updateData.title = title;
     if (shortNote) updateData.shortNote = shortNote;
     if (promoCode) updateData.promoCode = promoCode.toUpperCase();

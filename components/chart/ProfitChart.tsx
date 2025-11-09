@@ -1,4 +1,5 @@
 import {Line} from "react-chartjs-2";
+import type { Tick } from 'chart.js';
 import {
     Chart as ChartJS,
     CategoryScale,
@@ -73,7 +74,10 @@ export default function ProfitChart(){
                 },
                 ticks: {
                     color: '#6b7280',
-                    callback: (value: any) => `$${(value / 1000).toFixed(0)}k`
+                    callback: (value: number | string | Tick) => {
+                        const num = typeof value === 'number' ? value : Number(value);
+                        return `$${(num / 1000).toFixed(0)}k`;
+                    }
                 }
             }
         },

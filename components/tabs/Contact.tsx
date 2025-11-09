@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react'
+import React, { useState } from 'react'
 import { Card, CardContent, CardHeader, CardTitle } from '../ui/card'
 import { Table, TableBody, TableCaption, TableCell, TableHead, TableHeader, TableRow } from '../ui/table';
 import { Badge } from '../ui/badge';
@@ -13,7 +13,9 @@ interface ContactMessage {
 }
 
 function Contact() {
-   const [contacts, setContacts] = useState<ContactMessage[]>([{
+  const [contacts, setContacts] = useState<ContactMessage[]>([]);
+
+  setContacts([{
     id: "1",
     name: "John Doe",
     email: "john.doe@example.com",
@@ -28,21 +30,7 @@ function Contact() {
     subject: "Support",
     message: "I need help with my account.",
     date: "2023-01-01"
-  }]);
-
-  // Fetch all submitted messages
-  // useEffect(() => {
-  //   const fetchContacts = async () => {
-  //     const res = await fetch("/api/contact");
-  //     if (res.ok) {
-  //       const data = await res.json();
-  //       setContacts(data);
-  //     }
-  //   };
-  //   fetchContacts();
-  // }, []);
-
-  console.log(contacts);
+  }])
 
   return (
     <div className='w-full h-[88vh] p-6'>

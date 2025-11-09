@@ -26,6 +26,7 @@ function PromoAndDelivery() {
       }
     } catch (error) {
       toast.error('Failed to fetch offers')
+      console.log(error)
     } finally {
       setLoading(false)
     }

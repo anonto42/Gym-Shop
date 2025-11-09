@@ -1,5 +1,5 @@
 
-export interface IResponse<T = any> {
+export interface IResponse<T = unknown> {
     isError: boolean;
     status: number;
     message: string;

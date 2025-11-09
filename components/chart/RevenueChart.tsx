@@ -9,6 +9,7 @@ import {
     Tooltip,
     Legend,
     Filler,
+    Tick,
 } from 'chart.js';
 
 ChartJS.register(
@@ -100,8 +101,11 @@ export default function RevenueChart() {
                     drawBorder: false,
                 },
                 ticks: {
-                    color: '#6b7280',
-                    callback: (value: any) => `$${(value / 1000).toFixed(0)}k`
+                        color: '#6b7280',
+                        callback: (value: number | string | Tick) => {
+                        const num = typeof value === 'number' ? value : Number(value);
+                        return `$${(num / 1000).toFixed(0)}k`;
+                    }
                 }
             }
         },

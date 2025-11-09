@@ -1,21 +1,25 @@
 "use client";
 import { Contact2, LogOut, MessageCircle, Package2, User } from "lucide-react";
 import { BiSolidOffer } from "react-icons/bi";
-import { FaTeamspeak } from "react-icons/fa";
-import { FcAbout, FcPrivacy } from "react-icons/fc";
+import { FcPrivacy } from "react-icons/fc";
 import { GrDashboard } from "react-icons/gr";
 import { MdProductionQuantityLimits } from "react-icons/md";
 import { PiFlagBanner } from "react-icons/pi";
 import { TbBrandBing } from "react-icons/tb";
-import { useMemo } from "react";
+import { SVGProps, useMemo } from "react";
 
 interface Props {
     activeTab: string;
     setActiveTab: (tab: string) => void;
 }
 
-// Memoize the icon components with consistent sizing
-const createIconComponent = (IconComponent: React.ComponentType<any>, size = 18) => (
+interface IconProps extends SVGProps<SVGSVGElement> {
+  size?: number | string;
+  color?: string;
+  className?: string;
+}
+
+const createIconComponent = (IconComponent: React.ComponentType<IconProps>, size = 18) => (
     <IconComponent size={size} />
 );
 
@@ -66,7 +70,7 @@ export default function Sidebar({ activeTab, setActiveTab }: Props) {
     return (
         <div className="w-[400px] h-full flex justify-center items-center relative">
             <div className="w-[230px] md:w-[260px] xl:w-[300px] h-[95%] bg-white rounded-3xl relative flex flex-col items-end pt-[16px]">
-                {tabs.map((Item, index) => (
+                {tabs.map((Item) => (
                     <button
                         key={Item.title}
                         onClick={() => setActiveTab(Item.title)}

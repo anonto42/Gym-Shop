@@ -27,7 +27,7 @@ async function HeroSection() {
       <div className='absolute bottom-4 md:right-0 md:bottom-0'>
         <div className='relative w-[300px] h-[300px] sm:w-[450px] sm:h-[450px] md:w-[600px] md:h-[600px] xl:w-[800px] xl:h-[800px]'>
           <Image
-            src={data?.hero.imageUrl!}
+            src={!data?.hero.imageUrl? "": data?.hero.imageUrl }
             alt="Hero Image"
             fill
             className='object-contain drop-shadow-2xl'

@@ -10,5 +10,5 @@ export interface ISite {
 }
 
 export interface ISiteModel extends Model<ISite>{
-    
+    findByOne(id: string): ISite;
 }

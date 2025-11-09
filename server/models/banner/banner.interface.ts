@@ -7,4 +7,6 @@ export interface IBannerMessage {
   icon?: string;
 }
 
-export interface IBannerMessageModel extends Model<IBannerMessage> {}
+export interface IBannerMessageModel extends Model<IBannerMessage> {
+  someThink(any: number): string;
+}

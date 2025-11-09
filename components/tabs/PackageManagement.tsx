@@ -31,33 +31,47 @@ interface FormData {
     category: string;
 }
 
-const convertToPlainObject = (obj: any): any => {
-    if (obj && typeof obj === 'object') {
-        // Handle Mongoose documents
-        if (obj.toJSON) {
-            return obj.toJSON();
-        }
-        // Handle ObjectId
-        if (obj._id && typeof obj._id.toString === 'function') {
-            return {
-                ...obj,
-                _id: obj._id.toString()
-            };
-        }
-        // Handle arrays
-        if (Array.isArray(obj)) {
-            return obj.map(item => convertToPlainObject(item));
-        }
-        // Handle nested objects
-        const plainObj: any = {};
-        for (const key in obj) {
-            if (obj.hasOwnProperty(key)) {
-                plainObj[key] = convertToPlainObject(obj[key]);
-            }
-        }
-        return plainObj;
+// Define types for MongoDB objects
+interface MongooseDocument {
+  toJSON?: () => Record<string, unknown>;
+}
+
+interface ObjectIdLike {
+  _id?: {
+    toString?: () => string;
+  };
+}
+
+type ConvertibleObject = Record<string, unknown> & MongooseDocument & ObjectIdLike;
+
+const convertToPlainObject = (obj: unknown): unknown => {
+  if (obj && typeof obj === 'object') {
+    // Handle Mongoose documents
+    const convertibleObj = obj as ConvertibleObject;
+    if (convertibleObj.toJSON) {
+      return convertibleObj.toJSON();
     }
-    return obj;
+    // Handle ObjectId
+    if (convertibleObj._id && typeof convertibleObj._id.toString === 'function') {
+      return {
+        ...convertibleObj,
+        _id: convertibleObj._id.toString()
+      };
+    }
+    // Handle arrays
+    if (Array.isArray(obj)) {
+      return obj.map(item => convertToPlainObject(item));
+    }
+    // Handle nested objects
+    const plainObj: Record<string, unknown> = {};
+    for (const key in obj) {
+      if (Object.prototype.hasOwnProperty.call(obj, key)) {
+        plainObj[key] = convertToPlainObject((obj as Record<string, unknown>)[key]);
+      }
+    }
+    return plainObj;
+  }
+  return obj;
 };
 
 export default function PackageManagement() {
@@ -94,10 +108,10 @@ export default function PackageManagement() {
                 if (!response.isError && response.data?.packages) {
                     // Convert MongoDB objects to plain objects and ensure imageUrl is array
                     const plainPackages = response.data.packages.map(pkg => {
-                        const plainPkg = convertToPlainObject(pkg);
+                        const plainPkg = convertToPlainObject(pkg) as IPackage;
                         // Ensure imageUrl is always an array of strings
                         if (plainPkg.imageUrl && !Array.isArray(plainPkg.imageUrl)) {
-                            plainPkg.imageUrl = [plainPkg.imageUrl];
+                            plainPkg.imageUrl = [plainPkg.imageUrl as string];
                         } else if (!plainPkg.imageUrl) {
                             plainPkg.imageUrl = [];
                         }
@@ -165,7 +179,11 @@ export default function PackageManagement() {
             
             // Call the server function with the selected files array
             const response = await uploadMultipleToCloudinary(selectedFiles);
-            console.log("this is the response of the server function :-: ", response)
+            setFormData(prev => ({ 
+                ...prev, 
+                imageUrl: response
+            }));
+            console.log({response,formData})
             
             // if (!response.isError && response.data?.imageUrls) {
             //     // Add all uploaded image URLs to formData
@@ -218,9 +236,9 @@ export default function PackageManagement() {
     // Open modal for editing package
     const handleEdit = (pkg: IPackage) => {
         // Ensure we're working with a plain object and imageUrl is array of strings
-        const plainPackage = convertToPlainObject(pkg);
+        const plainPackage = convertToPlainObject(pkg) as IPackage;
         const imageUrlArray: string[] = Array.isArray(plainPackage.imageUrl) 
-            ? plainPackage.imageUrl.filter((url: any): url is string => typeof url === 'string')
+            ? plainPackage.imageUrl.filter((url: unknown): url is string => typeof url === 'string')
             : (plainPackage.imageUrl && typeof plainPackage.imageUrl === 'string' ? [plainPackage.imageUrl] : []);
         
         setEditingPackage(plainPackage);
@@ -291,10 +309,10 @@ export default function PackageManagement() {
                 const reloadResponse = await getAllPackagesServerSide();
                 if (!reloadResponse.isError && reloadResponse.data?.packages) {
                     const plainPackages = reloadResponse.data.packages.map(pkg => {
-                        const plainPkg = convertToPlainObject(pkg);
+                        const plainPkg = convertToPlainObject(pkg) as IPackage;
                         // Ensure imageUrl is always an array of strings
                         if (plainPkg.imageUrl && !Array.isArray(plainPkg.imageUrl)) {
-                            plainPkg.imageUrl = [plainPkg.imageUrl];
+                            plainPkg.imageUrl = [plainPkg.imageUrl as string];
                         } else if (!plainPkg.imageUrl) {
                             plainPkg.imageUrl = [];
                         }
@@ -327,10 +345,10 @@ export default function PackageManagement() {
                 const reloadResponse = await getAllPackagesServerSide();
                 if (!reloadResponse.isError && reloadResponse.data?.packages) {
                     const plainPackages = reloadResponse.data.packages.map(pkg => {
-                        const plainPkg = convertToPlainObject(pkg);
+                        const plainPkg = convertToPlainObject(pkg) as IPackage;
                         // Ensure imageUrl is always an array of strings
                         if (plainPkg.imageUrl && !Array.isArray(plainPkg.imageUrl)) {
-                            plainPkg.imageUrl = [plainPkg.imageUrl];
+                            plainPkg.imageUrl = [plainPkg.imageUrl as string];
                         } else if (!plainPkg.imageUrl) {
                             plainPkg.imageUrl = [];
                         }

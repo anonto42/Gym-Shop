@@ -23,5 +23,5 @@ export interface IOfferResponse {
   isError: boolean;
   status: number;
   message: string;
-  data?: any;
+  data?: object;
 }

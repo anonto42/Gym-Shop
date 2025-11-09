@@ -5,19 +5,32 @@ import { SendResponse } from "../helper/sendResponse.helper";
 import { handleServerError } from "../helper/ErrorHandler";
 import { PackageModel } from "../models/package/package.model";
 import { ICreatePackageInput, IPackageResponse, IUpdatePackageInput } from "../interface/package.interface";
+import { IPackage } from "../models/package/package.interface";
 
-// Helper function to convert MongoDB documents to plain objects
-const convertToPlainObject = (doc: any): any => {
+interface MongooseDocument {
+  toJSON?: () => Record<string, unknown>;
+}
+
+interface ObjectIdLike {
+  _id?: {
+    toString?: () => string;
+  };
+}
+
+type ConvertibleObject = Record<string, unknown> & MongooseDocument & ObjectIdLike;
+
+const convertToPlainObject = (doc: unknown): unknown => {
   if (doc && typeof doc === 'object') {
     // Handle Mongoose documents
-    if (doc.toJSON) {
-      return doc.toJSON();
+    const convertibleDoc = doc as ConvertibleObject;
+    if (convertibleDoc.toJSON) {
+      return convertibleDoc.toJSON();
     }
     // Handle ObjectId
-    if (doc._id && typeof doc._id.toString === 'function') {
+    if (convertibleDoc._id && typeof convertibleDoc._id.toString === 'function') {
       return {
-        ...doc,
-        _id: doc._id.toString()
+        ...convertibleDoc,
+        _id: convertibleDoc._id.toString()
       };
     }
     // Handle arrays
@@ -25,10 +38,10 @@ const convertToPlainObject = (doc: any): any => {
       return doc.map(item => convertToPlainObject(item));
     }
     // Handle nested objects
-    const plainObj: any = {};
+    const plainObj: Record<string, unknown> = {};
     for (const key in doc) {
-      if (doc.hasOwnProperty(key)) {
-        plainObj[key] = convertToPlainObject(doc[key]);
+      if (Object.prototype.hasOwnProperty.call(doc, key)) {
+        plainObj[key] = convertToPlainObject((doc as Record<string, unknown>)[key]);
       }
     }
     return plainObj;
@@ -119,7 +132,7 @@ export async function getActivePackagesServerSide(): Promise<IPackageResponse> {
     try {
         await connectToDB();
 
-        const packages = await PackageModel.findActivePackages();
+        const packages = await PackageModel.find({ isActive: true }).sort({ createdAt: -1 }).exec();
 
         // Convert all packages to plain objects
         const plainPackages = packages.map(pkg => convertToPlainObject(pkg));
@@ -140,7 +153,7 @@ export async function getFeaturedPackagesServerSide(): Promise<IPackageResponse>
     try {
         await connectToDB();
 
-        const packages = await PackageModel.findFeaturedPackages();
+        const packages = await PackageModel.find({ isFeatured: true, isActive: true }).sort({ createdAt: -1 }).exec();
 
         // Convert all packages to plain objects
         const plainPackages = packages.map(pkg => convertToPlainObject(pkg));
@@ -161,7 +174,7 @@ export async function getPackagesByCategoryServerSide(category: string): Promise
     try {
         await connectToDB();
 
-        const packages = await PackageModel.findByCategory(category);
+        const packages = await PackageModel.find({ category, isActive: true }).sort({ createdAt: -1 }).exec();
 
         // Convert all packages to plain objects
         const plainPackages = packages.map(pkg => convertToPlainObject(pkg));
@@ -237,12 +250,12 @@ export async function updatePackageServerSide(packageId: string, body: IUpdatePa
             }
         }
 
-        const updateData: any = {};
+        const updateData: Partial<IPackage> = {};
         if (body.title) updateData.title = body.title;
         if (body.description) updateData.description = body.description;
         if (body.price !== undefined) updateData.price = body.price;
         if (body.originalPrice !== undefined) updateData.originalPrice = body.originalPrice;
-        if (body.features) updateData.features = body.features;
+        if (body.features) updateData.features = body.features.filter(f => f.trim() !== "");
         if (body.imageUrl) updateData.imageUrl = body.imageUrl;
         if (body.rating !== undefined) updateData.rating = body.rating;
         if (typeof body.isActive === 'boolean') updateData.isActive = body.isActive;
@@ -254,6 +267,14 @@ export async function updatePackageServerSide(packageId: string, body: IUpdatePa
             { $set: updateData },
             { new: true, runValidators: true }
         ).lean().exec();
+
+        if (!updatedPackage) {
+            return SendResponse({ 
+                isError: true, 
+                status: 404, 
+                message: "Package not found during update" 
+            });
+        }
 
         // Convert to plain object
         const plainPackage = convertToPlainObject(updatedPackage);
@@ -315,13 +336,21 @@ export async function togglePackageStatusServerSide(packageId: string): Promise<
             { new: true }
         ).lean().exec();
 
+        if (!updatedPackage) {
+            return SendResponse({ 
+                isError: true, 
+                status: 404, 
+                message: "Package not found during status update" 
+            });
+        }
+
         // Convert to plain object
         const plainPackage = convertToPlainObject(updatedPackage);
 
         return SendResponse({ 
             isError: false, 
             status: 200, 
-            message: `Package ${updatedPackage?.isActive ? 'activated' : 'deactivated'} successfully`,
+            message: `Package ${updatedPackage.isActive ? 'activated' : 'deactivated'} successfully`,
             data: { package: plainPackage }
         });
 
@@ -350,13 +379,21 @@ export async function togglePackageFeaturedStatusServerSide(packageId: string): 
             { new: true }
         ).lean().exec();
 
+        if (!updatedPackage) {
+            return SendResponse({ 
+                isError: true, 
+                status: 404, 
+                message: "Package not found during featured status update" 
+            });
+        }
+
         // Convert to plain object
         const plainPackage = convertToPlainObject(updatedPackage);
 
         return SendResponse({ 
             isError: false, 
             status: 200, 
-            message: `Package ${updatedPackage?.isFeatured ? 'featured' : 'unfeatured'} successfully`,
+            message: `Package ${updatedPackage.isFeatured ? 'featured' : 'unfeatured'} successfully`,
             data: { package: plainPackage }
         });
 

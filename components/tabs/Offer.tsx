@@ -6,7 +6,6 @@ import { Label } from '@radix-ui/react-label'
 import { Textarea } from '../ui/textarea'
 import { toast } from 'sonner'
 import { IOffer } from '@/server/models/offer/offer.interface'
-import Loader from '../loader/Loader'
 import { Switch } from '../ui/switch'
 import { createOfferServerSide, deleteOfferServerSide, getAllOffersServerSide, toggleOfferStatusServerSide, updateOfferServerSide } from '@/server/functions/admin.fun';
 
@@ -39,6 +38,7 @@ function Offer() {
         toast.error(response.message || 'Failed to fetch offers')
       }
     } catch (error) {
+      console.log(error)
       toast.error('Failed to fetch offers')
     } finally {
       setLoading(false)
@@ -118,6 +118,7 @@ function Offer() {
         fetchOffers()
       }
     } catch (error) {
+      console.log(error)
       toast.error('Failed to save offer')
     } finally {
       setLoading(false)
@@ -151,6 +152,7 @@ function Offer() {
         fetchOffers()
       }
     } catch (error) {
+      console.log(error)
       toast.error('Failed to delete offer')
     } finally {
       setLoading(false)
@@ -160,7 +162,8 @@ function Offer() {
   const handleToggleStatus = async (offerId: string, currentStatus: boolean) => {
     setLoading(true)
     try {
-      const response = await toggleOfferStatusServerSide(offerId)
+      const response = await toggleOfferStatusServerSide(offerId);
+      console.log(currentStatus);
       if (response.isError) {
         toast.error(response.message)
       } else {
@@ -168,6 +171,7 @@ function Offer() {
         fetchOffers()
       }
     } catch (error) {
+      console.log(error)
       toast.error('Failed to update offer status')
     } finally {
       setLoading(false)

@@ -1,3 +1,4 @@
+import Image from "next/image";
 import { useState } from "react";
 
 interface ImageWithSkeletonProps {
@@ -28,7 +29,7 @@ export default function ImageWithSkeleton({
             )}
 
             {/* Image */}
-            <img
+            <Image
                 src={error ? fallbackSrc : src}
                 alt={alt}
                 onLoad={() => setLoaded(true)}
