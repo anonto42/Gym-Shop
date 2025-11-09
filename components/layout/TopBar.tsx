@@ -26,7 +26,7 @@ const TopBar = () => {
           }
         }
     })()
-  }, []);
+  },[]);
 
   return (
     <div className="w-full bg-[#222222]">
