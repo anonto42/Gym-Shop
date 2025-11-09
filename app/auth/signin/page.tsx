@@ -4,7 +4,7 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import React, {useState} from 'react';
 import { useRouter } from "next/navigation";
 import Link from 'next/link';
-import {signInServerSide} from "@/server/functions/auth.fun";
+import {isAuthenticatedAndGetUser, signInServerSide} from "@/server/functions/auth.fun";
 import Loader from "@/components/loader/Loader";
 import {IError} from "@/server/interface/error.interface";
 import {ISignInInput} from "@/server/interface/auth.interface";
@@ -55,7 +55,9 @@ const SignIn = () => {
         description: 'Welcome to our platform!',
       });
 
-      await setCookie({ value: response });
+      await setCookie({ value: response });          
+      const res = await isAuthenticatedAndGetUser();
+      await setCookie({name:"user", value: res as string });
 
       router.refresh();
       router.push('/');
