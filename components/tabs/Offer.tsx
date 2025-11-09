@@ -186,7 +186,7 @@ function Offer() {
 
   return (
     <div className='w-full min-h-[88vh] p-4 overflow-hidden'>
-      {loading && <Loader />}
+      {/* {loading && <Loader />} */}
       
       <div className='w-full h-full bg-white border rounded-3xl p-6'>
         {/* Header */}
