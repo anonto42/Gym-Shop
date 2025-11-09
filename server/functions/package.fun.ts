@@ -5,7 +5,36 @@ import { SendResponse } from "../helper/sendResponse.helper";
 import { handleServerError } from "../helper/ErrorHandler";
 import { PackageModel } from "../models/package/package.model";
 import { ICreatePackageInput, IPackageResponse, IUpdatePackageInput } from "../interface/package.interface";
-import { uploadMultipleToCloudinary } from "../helper/cloudinary.helper";
+
+// Helper function to convert MongoDB documents to plain objects
+const convertToPlainObject = (doc: any): any => {
+  if (doc && typeof doc === 'object') {
+    // Handle Mongoose documents
+    if (doc.toJSON) {
+      return doc.toJSON();
+    }
+    // Handle ObjectId
+    if (doc._id && typeof doc._id.toString === 'function') {
+      return {
+        ...doc,
+        _id: doc._id.toString()
+      };
+    }
+    // Handle arrays
+    if (Array.isArray(doc)) {
+      return doc.map(item => convertToPlainObject(item));
+    }
+    // Handle nested objects
+    const plainObj: any = {};
+    for (const key in doc) {
+      if (doc.hasOwnProperty(key)) {
+        plainObj[key] = convertToPlainObject(doc[key]);
+      }
+    }
+    return plainObj;
+  }
+  return doc;
+};
 
 export async function createPackageServerSide(body: ICreatePackageInput): Promise<IPackageResponse> {
     try {
@@ -50,11 +79,14 @@ export async function createPackageServerSide(body: ICreatePackageInput): Promis
             category
         });
 
+        // Convert to plain object before sending to client
+        const plainPackage = convertToPlainObject(newPackage);
+
         return SendResponse({ 
             isError: false, 
             status: 201, 
             message: "Package created successfully",
-            data: { package: newPackage }
+            data: { package: plainPackage }
         });
 
     } catch (error) {
@@ -68,11 +100,14 @@ export async function getAllPackagesServerSide(): Promise<IPackageResponse> {
 
         const packages = await PackageModel.find().sort({ createdAt: -1 }).exec();
 
+        // Convert all packages to plain objects
+        const plainPackages = packages.map(pkg => convertToPlainObject(pkg));
+
         return SendResponse({ 
             isError: false, 
             status: 200, 
             message: "Packages fetched successfully",
-            data: { packages }
+            data: { packages: plainPackages }
         });
 
     } catch (error) {
@@ -86,11 +121,14 @@ export async function getActivePackagesServerSide(): Promise<IPackageResponse> {
 
         const packages = await PackageModel.findActivePackages();
 
+        // Convert all packages to plain objects
+        const plainPackages = packages.map(pkg => convertToPlainObject(pkg));
+
         return SendResponse({ 
             isError: false, 
             status: 200, 
             message: "Active packages fetched successfully",
-            data: { packages }
+            data: { packages: plainPackages }
         });
 
     } catch (error) {
@@ -104,11 +142,14 @@ export async function getFeaturedPackagesServerSide(): Promise<IPackageResponse>
 
         const packages = await PackageModel.findFeaturedPackages();
 
+        // Convert all packages to plain objects
+        const plainPackages = packages.map(pkg => convertToPlainObject(pkg));
+
         return SendResponse({ 
             isError: false, 
             status: 200, 
             message: "Featured packages fetched successfully",
-            data: { packages }
+            data: { packages: plainPackages }
         });
 
     } catch (error) {
@@ -122,11 +163,14 @@ export async function getPackagesByCategoryServerSide(category: string): Promise
 
         const packages = await PackageModel.findByCategory(category);
 
+        // Convert all packages to plain objects
+        const plainPackages = packages.map(pkg => convertToPlainObject(pkg));
+
         return SendResponse({ 
             isError: false, 
             status: 200, 
             message: `Packages for ${category} fetched successfully`,
-            data: { packages }
+            data: { packages: plainPackages }
         });
 
     } catch (error) {
@@ -148,11 +192,14 @@ export async function getPackageByIdServerSide(packageId: string): Promise<IPack
             });
         }
 
+        // Convert to plain object (even though we used lean(), still ensure it's plain)
+        const plainPackage = convertToPlainObject(packageData);
+
         return SendResponse({ 
             isError: false, 
             status: 200, 
             message: "Package fetched successfully",
-            data: { package: packageData }
+            data: { package: plainPackage }
         });
 
     } catch (error) {
@@ -208,11 +255,14 @@ export async function updatePackageServerSide(packageId: string, body: IUpdatePa
             { new: true, runValidators: true }
         ).lean().exec();
 
+        // Convert to plain object
+        const plainPackage = convertToPlainObject(updatedPackage);
+
         return SendResponse({ 
             isError: false, 
             status: 200, 
             message: "Package updated successfully",
-            data: { package: updatedPackage }
+            data: { package: plainPackage }
         });
 
     } catch (error) {
@@ -265,11 +315,14 @@ export async function togglePackageStatusServerSide(packageId: string): Promise<
             { new: true }
         ).lean().exec();
 
+        // Convert to plain object
+        const plainPackage = convertToPlainObject(updatedPackage);
+
         return SendResponse({ 
             isError: false, 
             status: 200, 
             message: `Package ${updatedPackage?.isActive ? 'activated' : 'deactivated'} successfully`,
-            data: { package: updatedPackage }
+            data: { package: plainPackage }
         });
 
     } catch (error) {
@@ -295,13 +348,16 @@ export async function togglePackageFeaturedStatusServerSide(packageId: string): 
             packageId,
             { $set: { isFeatured: !packageData.isFeatured } },
             { new: true }
-        ).exec();
+        ).lean().exec();
+
+        // Convert to plain object
+        const plainPackage = convertToPlainObject(updatedPackage);
 
         return SendResponse({ 
             isError: false, 
             status: 200, 
             message: `Package ${updatedPackage?.isFeatured ? 'featured' : 'unfeatured'} successfully`,
-            data: { package: updatedPackage }
+            data: { package: plainPackage }
         });
 
     } catch (error) {
