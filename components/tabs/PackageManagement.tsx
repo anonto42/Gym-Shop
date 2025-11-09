@@ -105,9 +105,9 @@ export default function PackageManagement() {
             try {
                 setLoading(true);
                 const response = await getAllPackagesServerSide();
-                if (!response.isError && response.data?.packages) {
-                    // Convert MongoDB objects to plain objects and ensure imageUrl is array
-                    const plainPackages = response.data.packages.map(pkg => {
+                if (!response.isError && response.data) {
+                    const { packages } = response.data as { packages: IPackage[] }
+                    const plainPackages = packages.map(pkg => {
                         const plainPkg = convertToPlainObject(pkg) as IPackage;
                         // Ensure imageUrl is always an array of strings
                         if (plainPkg.imageUrl && !Array.isArray(plainPkg.imageUrl)) {
@@ -307,8 +307,9 @@ export default function PackageManagement() {
             if (!response.isError) {
                 // Reload packages to get updated data
                 const reloadResponse = await getAllPackagesServerSide();
-                if (!reloadResponse.isError && reloadResponse.data?.packages) {
-                    const plainPackages = reloadResponse.data.packages.map(pkg => {
+                if (!reloadResponse.isError && reloadResponse.data) {
+                    const { packages } = reloadResponse.data as { packages: IPackage[] }
+                    const plainPackages = packages.map(pkg => {
                         const plainPkg = convertToPlainObject(pkg) as IPackage;
                         // Ensure imageUrl is always an array of strings
                         if (plainPkg.imageUrl && !Array.isArray(plainPkg.imageUrl)) {
@@ -343,8 +344,8 @@ export default function PackageManagement() {
             if (!response.isError) {
                 // Reload packages to get updated data
                 const reloadResponse = await getAllPackagesServerSide();
-                if (!reloadResponse.isError && reloadResponse.data?.packages) {
-                    const plainPackages = reloadResponse.data.packages.map(pkg => {
+                if (!reloadResponse.isError && reloadResponse.data) {
+                    const plainPackages = packages.map(pkg => {
                         const plainPkg = convertToPlainObject(pkg) as IPackage;
                         // Ensure imageUrl is always an array of strings
                         if (plainPkg.imageUrl && !Array.isArray(plainPkg.imageUrl)) {

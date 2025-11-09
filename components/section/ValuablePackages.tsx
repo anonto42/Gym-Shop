@@ -7,7 +7,6 @@ import { IPackage } from "@/server/models/package/package.interface";
 import { getAllPackagesServerSide } from "@/server/functions/package.fun";
 import { toast } from "sonner";
 
-// Define types for MongoDB objects
 interface MongooseDocument {
   toJSON?: () => Record<string, unknown>;
 }
@@ -55,16 +54,16 @@ const ValuablePackages = () => {
   const [isMounted, setIsMounted] = useState<boolean>(false);
   const [isLoading, setLoading] = useState<boolean>(true);
   
-  // Load packages on component mount
   useEffect(() => {
     setIsMounted(true);
     const initialize = async () => {
         try {
             setLoading(true);
             const response = await getAllPackagesServerSide();
-            if (!response.isError && response.data?.packages) {
+            if (!response.isError && response.data) {
+                const { packages } = response.data as { packages: IPackage[]}
                 // Convert MongoDB objects to plain objects and ensure imageUrl is array
-                const plainPackages = response.data.packages.map(pkg => {
+                const plainPackages = packages.map(pkg => {
                     const plainPkg = convertToPlainObject(pkg) as IPackage;
                     // Ensure imageUrl is always an array of strings
                     if (plainPkg.imageUrl && !Array.isArray(plainPkg.imageUrl)) {
@@ -89,12 +88,10 @@ const ValuablePackages = () => {
     initialize();
   }, []);
 
-  // Get active packages for display (you can filter by featured if you want)
   const displayPackages = packages
-      .filter(pkg => pkg?.isActive) // Only show active packages
-      .slice(0, 3); // Show only first 3 packages
+    .filter(pkg => pkg?.isActive) 
+    .slice(0, 3); 
 
-  // Show loading until component is mounted and data is loaded
   if (!isMounted || isLoading) {
       return (
           <section className="w-full bg-white py-20 px-6 md:px-12 lg:px-20 flex flex-col items-center gap-12">

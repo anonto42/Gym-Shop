@@ -33,7 +33,8 @@ function Offer() {
     try {
       const response = await getAllOffersServerSide()
       if (!response.isError && response.data) {
-        setOffers(response.data.offers || [])
+        const { offers } = response.data as { offers:IOffer[]}
+        setOffers(offers || [])
       } else {
         toast.error(response.message || 'Failed to fetch offers')
       }

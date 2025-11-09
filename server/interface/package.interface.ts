@@ -27,13 +27,9 @@ export interface IUpdatePackageInput {
     category?: string;
 }
 
-export interface IPackageResponse {
+export interface IPackageResponse<T = unknown> {
     isError: boolean;
     status: number;
     message: string;
-    data?: {
-        package?: IPackage;
-        packages?: IPackage[];
-        total?: number;
-    };
+    data?:  T | null;
 }

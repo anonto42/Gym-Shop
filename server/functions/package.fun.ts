@@ -66,7 +66,6 @@ export async function createPackageServerSide(body: ICreatePackageInput): Promis
             category
         } = body;
 
-        // Check if package with same title already exists
         const existingPackage = await PackageModel.findOne({ 
             title: { $regex: new RegExp(`^${title}$`, 'i') } 
         });
@@ -92,7 +91,6 @@ export async function createPackageServerSide(body: ICreatePackageInput): Promis
             category
         });
 
-        // Convert to plain object before sending to client
         const plainPackage = convertToPlainObject(newPackage);
 
         return SendResponse({ 

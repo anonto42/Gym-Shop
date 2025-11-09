@@ -23,7 +23,9 @@ const AutoScrollBanner = () => {
     try {
       const response = await getBannerMessagesServerSide();
       if (!response.isError && response.data) {
-        setMessages(response.data.messages || []);
+        // Use type assertion
+        const bannerData = response.data as { messages: BannerMessage[] };
+        setMessages(bannerData.messages || []);
       }
     } catch (error) {
       console.error("Failed to fetch banner messages:", error);
@@ -55,7 +57,7 @@ const AutoScrollBanner = () => {
         animate={{ x: ["0%", "-100%"] }}
         transition={{
           ease: "linear",
-          duration: messages.length * 5, // Dynamic duration based on message count
+          duration: messages.length * 5,
           repeat: Infinity,
         }}
       >

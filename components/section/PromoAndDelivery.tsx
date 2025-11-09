@@ -7,6 +7,17 @@ import { getAllOffersServerSide } from '@/server/functions/admin.fun';
 import { toast } from 'sonner';
 import { IOffer } from '@/server/models/offer/offer.interface';
 
+interface IOffersResponseData {
+  offers: IOffer[];
+}
+
+interface IOffersResponse {
+  isError: boolean;
+  status: number;
+  message: string;
+  data?: IOffersResponseData;
+}
+
 function PromoAndDelivery() {
   const [loading, setLoading] = useState<boolean>(false);
   const [offers, setOffers] = useState<IOffer[]>([]);
@@ -16,19 +27,19 @@ function PromoAndDelivery() {
   }, []);
 
   const fetchOffers = async () => {
-    setLoading(true)
+    setLoading(true);
     try {
-      const response = await getAllOffersServerSide()
+      const response = await getAllOffersServerSide() as IOffersResponse;
       if (!response.isError && response.data) {
-        setOffers(response.data.offers || [])
+        setOffers(response.data.offers || []);
       } else {
-        toast.error(response.message || 'Failed to fetch offers')
+        toast.error(response.message || 'Failed to fetch offers');
       }
     } catch (error) {
-      toast.error('Failed to fetch offers')
-      console.log(error)
+      toast.error('Failed to fetch offers');
+      console.log(error);
     } finally {
-      setLoading(false)
+      setLoading(false);
     }
   };
 

@@ -19,9 +19,9 @@ export interface IUpdateOfferInput {
   isActive?: boolean;
 }
 
-export interface IOfferResponse {
+export interface IOfferResponse<T = unknown> {
   isError: boolean;
   status: number;
   message: string;
-  data?: object;
+  data?: T | unknown;
 }

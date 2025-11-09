@@ -16,6 +16,7 @@ import {
   IUpdateHeroSectionImageInput, 
 } from '@/server/interface/admin.interface';
 import { IUpdateHeroSectionInput } from '@/server/interface/auth.interface';
+import { ISite } from '@/server/models/site/site.interface';
 
 function Hero() {
   const [title, setTitle] = useState<string>('');
@@ -32,11 +33,12 @@ function Hero() {
 
   const fetchHeroSection = async () => {
     try {
-      const { data } = await getHeroSectionServerSide();
-      if (data?.hero) {
-        setTitle(data.hero.title || '');
-        setDescription(data.hero.description || '');
-        setImage(data.hero.imageUrl || '');
+      const res = await getHeroSectionServerSide();
+      const { hero } = res.data as ISite;
+      if (res.data) {
+        setTitle(hero.title || '');
+        setDescription(hero.description || '');
+        setImage(hero.imageUrl || '');
       }
     } catch (error) {
       console.log("Error fetching hero section:", error);
@@ -106,12 +108,13 @@ function Hero() {
         toast.error(response.message);
       } else {
         toast.success("Image updated successfully!");
+
+        const { imageUrl } = response.data as {imageUrl:string};
         
-        if (response.data?.imageUrl) {
-          setImage(response.data.imageUrl);
+        if (imageUrl) {
+          setImage(imageUrl);
         }
         
-        // Clear selection
         setPreviewImage(null);
         setSelectedFile(null);
         if (fileInputRef.current) {

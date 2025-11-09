@@ -2,10 +2,12 @@ import Image from 'next/image';
 import React from 'react';
 import Link from "next/link";
 import { getHeroSectionServerSide } from '@/server/functions/admin.fun';
+import { ISite } from '@/server/models/site/site.interface';
 
 async function HeroSection() {
 
-  const { data } = await getHeroSectionServerSide();
+  const res = await getHeroSectionServerSide();
+  const data = res.data as ISite;
 
   return (
     <div className='w-full h-[45svh] md:min-h-[70svh] flex flex-col md:flex-row items-center justify-between px-6 md:px-12 lg:px-20 overflow-hidden max-w-[1540px] mx-auto py-10 md:py-16 relative text-white '>

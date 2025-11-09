@@ -23,6 +23,10 @@ interface BannerMessage {
   order: number;
 }
 
+interface IBannerResponseData {
+  messages: BannerMessage[];
+}
+
 function BannerManagement() {
   const [messages, setMessages] = useState<BannerMessage[]>([]);
   const [loading, setLoading] = useState(false);
@@ -39,7 +43,8 @@ function BannerManagement() {
     try {
       const response = await getAllBannerMessagesServerSide();
       if (!response.isError && response.data) {
-        setMessages(response.data.messages || []);
+        const {messages} = response.data as IBannerResponseData;
+        setMessages(messages || []);
       }
     } catch {
       toast.error('Failed to fetch banner messages');
