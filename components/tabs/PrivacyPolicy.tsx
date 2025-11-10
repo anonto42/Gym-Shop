@@ -1,7 +1,11 @@
 "use client";
-import { useState } from "react";
+
+import {useEffect, useState} from "react";
 import ReactQuill from "react-quill-new";
 import "react-quill-new/dist/quill.snow.css";
+import {Button} from "@/components/ui/button";
+import {createAndUpdatePrivacyAndPolicyServerSide, getPrivacyAndPolicyServerSide} from "@/server/functions/admin.fun";
+import {toast} from "sonner";
 
 export default function PrivacyPolicy() {
     const [content, setContent] = useState("");
@@ -9,6 +13,14 @@ export default function PrivacyPolicy() {
     const handleChange = (value: string) => {
         setContent(value);
     };
+
+    useEffect(() => {
+        async function fatchPrivacy () {
+            const conent = await getPrivacyAndPolicyServerSide().then( e=> e.data) as string;
+            setContent(conent);
+        }
+        fatchPrivacy().then(r => console.log(r));
+    },[])
 
     const modules = {
         toolbar: [
@@ -42,8 +54,17 @@ export default function PrivacyPolicy() {
         "video",
     ];
 
+    const updateContent = async () => {
+        const formData = new FormData() as FormData & { content: string };
+        formData.append("content", content);
+
+        await createAndUpdatePrivacyAndPolicyServerSide(formData);
+
+        toast.success("Privacy policy updated");
+    }
+
     return (
-        <div className="w-[96%] mx-auto mt-4 border h-[85vh] overflow-hidden rounded-md p-4 flex flex-col gap-4 bg-white">
+        <div className="w-[96%] mx-auto mt-4 border h-[85vh] overflow-hidden rounded-md p-4 flex flex-col gap-4 bg-white relative">
             <h1 className={"text-3xl text-[#123499] font-semibold"}>Privacy & Policy</h1>
             {/* Editor */}
             <ReactQuill
@@ -55,6 +76,7 @@ export default function PrivacyPolicy() {
                 className="w-full h-[88%] bg-white"
                 placeholder="Write your terms and conditions here..."
             />
+            <Button className={"w-[80px] h-[40px] absolute bottom-10 right-10 cursor-pointer"} onClick={()=> updateContent()}>Update</Button>
         </div>
     );
 }
