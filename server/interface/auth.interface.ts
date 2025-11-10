@@ -35,3 +35,7 @@ export interface IUpdateHeroSectionInput extends FormData {
     title: string;
     description: string; 
 }
+
+export interface IUpdatePrivacyPolicySectionInput extends FormData {
+    content: string;
+}

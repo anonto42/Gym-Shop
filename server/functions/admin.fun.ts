@@ -7,7 +7,7 @@ import { SendResponse } from "../helper/sendResponse.helper";
 import { ServerError } from "../interface/serverError.interface";
 import { handleServerError } from "../helper/ErrorHandler";
 import { IResponse } from "../interface/response.interface";
-import { IUpdateHeroSectionInput } from "../interface/auth.interface";
+import {IUpdateHeroSectionInput, IUpdatePrivacyPolicySectionInput} from "../interface/auth.interface";
 import { SiteModle } from "../models/site/site.model";
 import { ISite } from "../models/site/site.interface";
 import { IUpdateHeroSectionImageInput } from "../interface/admin.interface";
@@ -423,4 +423,40 @@ export async function validatePromoCodeServerSide(promoCode: string): Promise<IO
   } catch (error) {
     return handleServerError(error as ServerError);
   }
+}
+
+export async function createAndUpdatePrivacyAndPolicyServerSide(body: IUpdatePrivacyPolicySectionInput ): Promise<IOfferResponse> {
+    try {
+        await connectToDB();
+
+        const content = body.get("content") as string;
+
+        let res = await SiteModle.findOneAndUpdate({},{ $set: {
+                "privacyAndPolicy": content
+            }}, { new: true}).lean().exec();
+
+        if ( !res ) {
+            res = await SiteModle.create({
+                "privacyAndPolicy": content
+            })
+        }
+
+        return SendResponse({ isError: false, status: 200, message: "Hero section updated successfully!" });
+
+    } catch (error : ServerError ) {
+        return handleServerError(error);
+    }
+}
+
+export async function getPrivacyAndPolicyServerSide( ): Promise<IOfferResponse> {
+    try {
+        await connectToDB();
+
+        const res = await SiteModle.findOne({}).lean().exec();
+
+        return SendResponse({ isError: false, status: 200, message: "Hero section updated successfully!", data: res?.privacyAndPolicy ?? "" });
+
+    } catch (error : ServerError ) {
+        return handleServerError(error);
+    }
 }

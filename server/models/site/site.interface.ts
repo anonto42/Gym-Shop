@@ -7,6 +7,7 @@ export interface ISite {
         description: string;
         imageUrl: string;
     },
+    privacyAndPolicy: string
 }
 
 export interface ISiteModel extends Model<ISite>{

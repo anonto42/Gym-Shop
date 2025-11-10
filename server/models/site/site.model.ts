@@ -7,6 +7,7 @@ const siteSchema = new Schema<ISite>({
         description: { type: String, default: "" },
         imageUrl: { type: String, default: "" },
     },
+    privacyAndPolicy: { type: String, default: "" },
 },{timestamps:true});
 
 let SiteModle: ISiteModel;
