@@ -44,6 +44,7 @@ function Contact() {
                 fetchContacts(); // Refresh the list
             }
         } catch (error) {
+            console.error(error);
             toast.error("Failed to update message");
         }
     };
@@ -58,6 +59,7 @@ function Contact() {
                 fetchContacts(); // Refresh the list
             }
         } catch (error) {
+            console.error(error);
             toast.error("Failed to delete message");
         }
     };

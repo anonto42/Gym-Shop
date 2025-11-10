@@ -1,10 +1,8 @@
 "use client";
 
-import Image from "next/image";
 import React, { useState } from "react";
 import { MdLocationOn, MdEmail, MdAccessTime } from "react-icons/md";
 import { BsTelephone } from "react-icons/bs";
-import imageUrl from "@/const/imageUrl";
 import { createContactMessageServerSide } from "@/server/functions/contact.fun";
 import { toast } from "sonner";
 
