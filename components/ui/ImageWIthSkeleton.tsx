@@ -1,5 +1,7 @@
+"use client";
+
 import Image from "next/image";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 
 interface ImageWithSkeletonProps {
     src: string;
@@ -18,6 +20,12 @@ export default function ImageWithSkeleton({
                                           }: ImageWithSkeletonProps) {
     const [loaded, setLoaded] = useState(false);
     const [error, setError] = useState(false);
+
+    // Only trigger client-side updates
+    useEffect(() => {
+        setLoaded(false);
+        setError(false);
+    }, []);
 
     return (
         <div
