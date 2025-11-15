@@ -1,14 +1,24 @@
 import {IResponse} from "@/server/interface/response.interface";
 import {IUser} from "@/server/models/user/user.interfce";
 
-export function SendResponse ( props: Partial<IResponse>): IResponse {
+export const SendResponse = <T = unknown>({
+                                              isError,
+                                              status,
+                                              message,
+                                              data
+                                          }: {
+    isError: boolean;
+    status: number;
+    message: string;
+    data?: T;
+}): IResponse<T> => {
     return {
-        status: props.status ? props.status : 200,
-        message: props.message ? props.message : "You request was processed successfully!",
-        isError: props.isError ? true : false,
-        data: props.data,
-    }
-}
+        isError,
+        status,
+        message,
+        data
+    };
+};
 
 // Type guard function
 export function isErrorResponse(response: IUser | IResponse): response is IResponse {

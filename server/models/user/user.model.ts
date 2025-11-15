@@ -21,6 +21,10 @@ const userSchema = new Schema<IUser, IUserModel>(
             lowercase: true,
             trim: true,
         },
+        contact: {
+            type: String,
+            default: "+880"
+        },
         password: {
             type: String,
             required: [true, "Password is required"],

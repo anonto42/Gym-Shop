@@ -13,6 +13,7 @@ export interface IUser {
     role: string;
     otp?: string;
     hashToken?: string;
+    contact?: string;
     createdAt?: Date;
     updatedAt?: Date;
 };

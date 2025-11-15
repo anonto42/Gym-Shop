@@ -1,107 +1,520 @@
 "use client";
-import { useState } from "react";
-import { Pen } from "lucide-react";
-import ImageWithSkeleton from "@/components/ui/ImageWIthSkeleton";
+
+import { useState, useEffect } from "react";
+import { Pen, LogOut, Save, X, Eye, EyeOff } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { toast } from "sonner";
+import { updateUserProfileServerSide, changeUserPasswordServerSide } from "@/server/functions/user.fun";
+import { IUser } from "@/server/models/user/user.interfce";
+import { getCookie, setCookie } from "@/server/helper/jwt.helper";
+import { isAuthenticatedAndGetUser } from "@/server/functions/auth.fun";
+import { USER_ROLE, USER_STATUS } from "@/enum/user.enum";
+import { uploadMultipleToCloudinary } from "@/server/helper/cloudinary.helper";
+import Image from "next/image";
 
 export default function ProfileTabs() {
     const [tab, setTab] = useState<"profile" | "password">("profile");
-    const [name, setName] = useState("Shakir Ahmed");
-    const [contact, setContact] = useState("+123456789");
+    const [user, setUser] = useState<IUser>({
+        name: "",
+        image: "https://res.cloudinary.com/ddsnont4o/image/upload/v1760025348/jhkjjhk_iesrwh.png",
+        email: "",
+        password: "",
+        status: USER_STATUS.ACTIVE,
+        isVerified: true,
+        role: USER_ROLE.USER,
+        createdAt: new Date()
+    });
+    const [loading, setLoading] = useState(false);
+    const [imageUploading, setImageUploading] = useState(false);
+    const [selectedFile, setSelectedFile] = useState<File | null>(null);
+    const [previewImage, setPreviewImage] = useState<string>("");
+    
+    // Form states
+    const [formData, setFormData] = useState({
+        name: "",
+        contact: "",
+        email: ""
+    });
 
-    const image =
-        "data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD/..."; // your base64 string
+    // Password states
+    const [currentPassword, setCurrentPassword] = useState("");
+    const [newPassword, setNewPassword] = useState("");
+    const [confirmPassword, setConfirmPassword] = useState("");
+    const [showCurrentPassword, setShowCurrentPassword] = useState(false);
+    const [showNewPassword, setShowNewPassword] = useState(false);
+    const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+
+    // Load user data on component mount
+    useEffect(() => {
+        const loadUserData = async () => {
+            const cookie = await getCookie("user");
+            if (typeof cookie == 'string' ) {
+                const userData = JSON.parse(cookie);
+                setUser(userData);
+                setPreviewImage(userData.image);
+                setFormData({
+                    name: userData.name || "",
+                    contact: userData.contact || "",
+                    email: userData.email || ""
+                });
+            } else {
+                const res = await isAuthenticatedAndGetUser();
+                if ( typeof res != "string" && res.isError == true) {
+                    setUser({
+                        name: "Guest User",
+                        image: "https://res.cloudinary.com/ddsnont4o/image/upload/v1760025348/jhkjjhk_iesrwh.png",
+                        email: "guest@example.com",
+                        password: "",
+                        status: USER_STATUS.ACTIVE,
+                        isVerified: true,
+                        role: USER_ROLE.USER,
+                        createdAt: new Date()
+                    });
+                } else if ( typeof res == "string" ) {
+                    await setCookie({name:"user", value: res });
+                    const userData = JSON.parse(res);
+                    setUser(userData);
+                    setPreviewImage(userData.image);
+                    setFormData({
+                        name: userData.name || "",
+                        contact: userData.contact || "",
+                        email: userData.email || ""
+                    });
+                }
+            }
+        };
+
+        loadUserData();
+    }, []);
+
+    const handleImageSelect = async (event: React.ChangeEvent<HTMLInputElement>) => {
+        const file = event.target.files?.[0];
+        if (!file) return;
+
+        setSelectedFile(file);
+        
+        // Create preview URL
+        const previewUrl = URL.createObjectURL(file);
+        setPreviewImage(previewUrl);
+
+        // Auto-upload when image is selected
+        await handleImageUpload(file);
+    };
+
+    const handleImageUpload = async (file: File) => {
+        setImageUploading(true);
+        try {
+            if (!user._id) {
+                toast.error("User not found");
+                return;
+            }
+
+            const uploadedUrls = await uploadMultipleToCloudinary([file]);
+            const newImageUrl = uploadedUrls[0];
+
+            if (newImageUrl) {
+                const response = await updateUserProfileServerSide(user._id, {
+                    image: newImageUrl
+                });
+
+                if (!response.isError && response.data) {
+                    const updatedUser = { ...user, image: newImageUrl };
+                    setUser(updatedUser);
+                    await setCookie({name:"user", value: JSON.stringify(updatedUser) });
+                    toast.success("Profile image updated successfully");
+                } else {
+                    toast.error("Failed to update profile image");
+                }
+            }
+        } catch (error) {
+            console.error("Error uploading image:", error);
+            toast.error("Failed to upload image");
+        } finally {
+            setImageUploading(false);
+        }
+    };
+
+    const handleInputChange = (field: string, value: string) => {
+        setFormData(prev => ({
+            ...prev,
+            [field]: value
+        }));
+    };
+
+    const handleSaveProfile = async (e: React.FormEvent) => {
+        e.preventDefault();
+        setLoading(true);
+
+        try {
+            if (!user._id) {
+                toast.error("User not found");
+                return;
+            }
+
+            const response = await updateUserProfileServerSide(user._id, {
+                name: formData.name,
+                contact: formData.contact
+            });
+
+            if (!response.isError && response.data) {
+                const updatedUser = { 
+                    ...user, 
+                    name: formData.name, 
+                    contact: formData.contact 
+                };
+                setUser(updatedUser);
+                await setCookie({name:"user", value: JSON.stringify(updatedUser) });
+                toast.success("Profile updated successfully");
+            } else {
+                toast.error(response.message || "Failed to update profile");
+            }
+        } catch (error) {
+            console.error("Error updating profile:", error);
+            toast.error("Failed to update profile");
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    const handlePasswordChange = async (e: React.FormEvent) => {
+        e.preventDefault();
+        setLoading(true);
+
+        try {
+            if (!user._id) {
+                toast.error("User not found");
+                return;
+            }
+
+            // Validation
+            if (!currentPassword) {
+                toast.error("Please enter your current password");
+                return;
+            }
+
+            if (!newPassword) {
+                toast.error("Please enter a new password");
+                return;
+            }
+
+            if (newPassword.length < 6) {
+                toast.error("Password must be at least 6 characters long");
+                return;
+            }
+
+            if (newPassword !== confirmPassword) {
+                toast.error("New passwords do not match");
+                return;
+            }
+
+            const response = await changeUserPasswordServerSide(user._id, {
+                currentPassword,
+                newPassword
+            });
+
+            if (!response.isError) {
+                toast.success("Password changed successfully");
+                // Clear form
+                setCurrentPassword("");
+                setNewPassword("");
+                setConfirmPassword("");
+                setShowCurrentPassword(false);
+                setShowNewPassword(false);
+                setShowConfirmPassword(false);
+            } else {
+                toast.error(response.message || "Failed to change password");
+            }
+        } catch (error) {
+            console.error("Error changing password:", error);
+            toast.error("Failed to change password");
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    const handleLogout = () => {
+        try {
+            // Clear all cookies
+            const cookies = document.cookie.split(";");
+            for (let cookie of cookies) {
+                const eqPos = cookie.indexOf("=");
+                const name = eqPos > -1 ? cookie.substr(0, eqPos).trim() : cookie.trim();
+                document.cookie = name + "=;expires=Thu, 01 Jan 1970 00:00:00 GMT;path=/";
+            }
+
+            // Clear localStorage and sessionStorage
+            localStorage.clear();
+            sessionStorage.clear();
+
+            toast.success("Logged out successfully");
+            
+            // Redirect to home page
+            setTimeout(() => {
+                window.location.href = "/";
+            }, 1000);
+
+        } catch (error) {
+            console.error("Logout error:", error);
+            toast.error("Logout failed");
+            window.location.href = "/";
+        }
+    };
+
+    const handleCancelEdit = () => {
+        setFormData({
+            name: user.name || "",
+            contact: user.contact || "",
+            email: user.email || ""
+        });
+        setSelectedFile(null);
+        setPreviewImage(user.image);
+    };
+
+    const handleCancelPassword = () => {
+        setCurrentPassword("");
+        setNewPassword("");
+        setConfirmPassword("");
+        setShowCurrentPassword(false);
+        setShowNewPassword(false);
+        setShowConfirmPassword(false);
+    };
+
+    if (!user._id) {
+        return (
+            <div className="w-full h-[85vh] flex items-center justify-center">
+                <div className="text-center">
+                    <p className="text-red-500 text-lg mb-4">Unable to load user data</p>
+                    <Button 
+                        onClick={() => window.location.reload()}
+                        className="bg-[#125BAC] hover:bg-[#0d4793]"
+                    >
+                        Retry
+                    </Button>
+                </div>
+            </div>
+        );
+    }
 
     return (
         <div className="w-full h-[85vh] px-6">
-            {/* Tabs */}
-            <div className="flex gap-6 p-6 text-white">
-                <h2
-                    onClick={() => setTab("profile")}
-                    className={`text-xl font-semibold cursor-pointer ${
-                        tab === "profile" ? "text-[#125BAC] underline" : ""
-                    }`}
+            {/* Header with Logout */}
+            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 gap-4">
+                {/* Tabs */}
+                <div className="flex gap-6 p-6">
+                    <button
+                        onClick={() => setTab("profile")}
+                        className={`text-xl font-semibold cursor-pointer transition-colors ${
+                            tab === "profile" ? "text-[#125BAC] underline" : "text-gray-600 hover:text-[#125BAC]"
+                        }`}
+                    >
+                        Edit Profile
+                    </button>
+                    <button
+                        onClick={() => setTab("password")}
+                        className={`text-xl font-semibold cursor-pointer transition-colors ${
+                            tab === "password" ? "text-[#125BAC] underline" : "text-gray-600 hover:text-[#125BAC]"
+                        }`}
+                    >
+                        Change Password
+                    </button>
+                </div>
+
+                {/* Logout Button */}
+                <Button
+                    onClick={handleLogout}
+                    variant="outline"
+                    className="flex items-center gap-2 text-red-600 border-red-600 hover:bg-red-50 whitespace-nowrap"
                 >
-                    Edit Profile
-                </h2>
-                <h2
-                    onClick={() => setTab("password")}
-                    className={`text-xl font-semibold cursor-pointer ${
-                        tab === "password" ? "text-[#125BAC] underline" : ""
-                    }`}
-                >
-                    Change Password
-                </h2>
+                    <LogOut size={18} />
+                    Logout
+                </Button>
             </div>
 
             {/* Content Card */}
             <div className="max-w-[700px] mx-auto shadow-md p-6 rounded-sm bg-white">
                 {tab === "profile" && (
-                    <>
+                    <form onSubmit={handleSaveProfile}>
                         {/* Profile Image */}
-                        <div className="w-[200px] h-[200px] mx-auto rounded-full bg-green-600 relative overflow-hidden">
-                            {/* Overlay Edit Icon */}
-                            <button className="absolute bottom-2 right-2 z-20 p-2 bg-white rounded-full shadow-md hover:bg-gray-100">
-                                <Pen size={20} />
-                            </button>
-
-                            {/* Skeleton / Image */}
-                            <ImageWithSkeleton
-                                src={image}
-                                className="w-full h-full object-cover"
+                        <div className="w-[200px] h-[200px] mx-auto rounded-full bg-gray-200 relative overflow-hidden border-4 border-[#125BAC]">
+                            <Image 
+                                src={previewImage || user.image} 
+                                alt="profile" 
+                                fill 
+                                className="object-cover" 
                             />
+                            
+                            {/* Hidden file input */}
+                            <input
+                                type="file"
+                                accept="image/*"
+                                onChange={handleImageSelect}
+                                className="hidden"
+                                id="profile-image-input"
+                            />
+                            
+                            <div className="absolute w-[40px] h-[40px] bottom-6 right-6 bg-[#ffff]/70 text-white z-50 cursor-pointer rounded-full">
+                                <label 
+                                    htmlFor="profile-image-input"
+                                    className="w-full h-full relative flex items-center justify-center cursor-pointer"
+                                >
+                                    {imageUploading ? (
+                                        <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                                    ) : (
+                                        <Pen className="text-black" />
+                                    )}
+                                </label>
+                            </div>
                         </div>
 
                         {/* Form Fields */}
                         <div className="mt-6 flex flex-col gap-4 max-w-[400px] mx-auto">
-                            <div className="flex flex-col gap-1">
-                                <Label htmlFor="fullname">Full Name</Label>
+                            <div className="flex flex-col gap-2">
+                                <Label htmlFor="name" className="font-medium">Full Name</Label>
                                 <Input
-                                    id="fullname"
-                                    value={name}
-                                    onChange={(e) => setName(e.target.value)}
+                                    id="name"
+                                    value={formData.name}
+                                    onChange={(e) => handleInputChange("name", e.target.value)}
+                                    required
+                                    className="w-full"
                                 />
                             </div>
 
-                            <div className="flex flex-col gap-1">
-                                <Label htmlFor="contact">Contact Number</Label>
+                            <div className="flex flex-col gap-2">
+                                <Label htmlFor="email" className="font-medium">Email</Label>
+                                <Input
+                                    id="email"
+                                    value={formData.email}
+                                    disabled
+                                    className="w-full bg-gray-100 cursor-not-allowed"
+                                />
+                                <p className="text-xs text-gray-500">Email cannot be changed</p>
+                            </div>
+
+                            <div className="flex flex-col gap-2">
+                                <Label htmlFor="contact" className="font-medium">Contact Number</Label>
                                 <Input
                                     id="contact"
-                                    value={contact}
-                                    onChange={(e) => setContact(e.target.value)}
+                                    value={formData.contact}
+                                    onChange={(e) => handleInputChange("contact", e.target.value)}
+                                    placeholder="+1234567890"
+                                    className="w-full"
                                 />
                             </div>
 
-                            <Button className="mt-4 w-full bg-blue-600 hover:bg-blue-700">
-                                Update
-                            </Button>
+                            <div className="flex gap-3 mt-4">
+                                <Button 
+                                    type="submit"
+                                    disabled={loading || imageUploading}
+                                    className="bg-[#125BAC] hover:bg-[#0d4793] flex items-center gap-2"
+                                >
+                                    <Save size={16} />
+                                    {loading ? "Saving..." : "Save Changes"}
+                                </Button>
+                                <Button 
+                                    type="button"
+                                    variant="outline"
+                                    onClick={handleCancelEdit}
+                                    disabled={loading}
+                                    className="flex items-center gap-2"
+                                >
+                                    <X size={16} />
+                                    Cancel
+                                </Button>
+                            </div>
                         </div>
-                    </>
+                    </form>
                 )}
 
                 {tab === "password" && (
-                    <div className="flex flex-col gap-4 max-w-[400px] mx-auto">
-                        <div className="flex flex-col gap-1">
-                            <Label htmlFor="currentPassword">Current Password</Label>
-                            <Input id="currentPassword" type="password" />
-                        </div>
+                    <form onSubmit={handlePasswordChange}>
+                        <div className="flex flex-col gap-4 max-w-[400px] mx-auto">
+                            <div className="flex flex-col gap-2">
+                                <Label htmlFor="currentPassword" className="font-medium">Current Password</Label>
+                                <div className="relative">
+                                    <Input
+                                        id="currentPassword"
+                                        type={showCurrentPassword ? "text" : "password"}
+                                        value={currentPassword}
+                                        onChange={(e) => setCurrentPassword(e.target.value)}
+                                        required
+                                        className="w-full pr-10"
+                                    />
+                                    <button
+                                        type="button"
+                                        onClick={() => setShowCurrentPassword(!showCurrentPassword)}
+                                        className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-500"
+                                    >
+                                        {showCurrentPassword ? <EyeOff size={16} /> : <Eye size={16} />}
+                                    </button>
+                                </div>
+                            </div>
 
-                        <div className="flex flex-col gap-1">
-                            <Label htmlFor="newPassword">New Password</Label>
-                            <Input id="newPassword" type="password" />
-                        </div>
+                            <div className="flex flex-col gap-2">
+                                <Label htmlFor="newPassword" className="font-medium">New Password</Label>
+                                <div className="relative">
+                                    <Input
+                                        id="newPassword"
+                                        type={showNewPassword ? "text" : "password"}
+                                        value={newPassword}
+                                        onChange={(e) => setNewPassword(e.target.value)}
+                                        required
+                                        minLength={6}
+                                        className="w-full pr-10"
+                                    />
+                                    <button
+                                        type="button"
+                                        onClick={() => setShowNewPassword(!showNewPassword)}
+                                        className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-500"
+                                    >
+                                        {showNewPassword ? <EyeOff size={16} /> : <Eye size={16} />}
+                                    </button>
+                                </div>
+                            </div>
 
-                        <div className="flex flex-col gap-1">
-                            <Label htmlFor="confirmPassword">Confirm Password</Label>
-                            <Input id="confirmPassword" type="password" />
-                        </div>
+                            <div className="flex flex-col gap-2">
+                                <Label htmlFor="confirmPassword" className="font-medium">Confirm Password</Label>
+                                <div className="relative">
+                                    <Input
+                                        id="confirmPassword"
+                                        type={showConfirmPassword ? "text" : "password"}
+                                        value={confirmPassword}
+                                        onChange={(e) => setConfirmPassword(e.target.value)}
+                                        required
+                                        className="w-full pr-10"
+                                    />
+                                    <button
+                                        type="button"
+                                        onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                                        className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-500"
+                                    >
+                                        {showConfirmPassword ? <EyeOff size={16} /> : <Eye size={16} />}
+                                    </button>
+                                </div>
+                            </div>
 
-                        <Button className="mt-4 w-full bg-blue-600 hover:bg-blue-700">
-                            Change Password
-                        </Button>
-                    </div>
+                            <div className="flex gap-3 mt-4">
+                                <Button 
+                                    type="submit"
+                                    disabled={loading}
+                                    className="bg-[#125BAC] hover:bg-[#0d4793] flex items-center gap-2"
+                                >
+                                    {loading ? "Changing..." : "Change Password"}
+                                </Button>
+                                <Button 
+                                    type="button"
+                                    variant="outline"
+                                    onClick={handleCancelPassword}
+                                    disabled={loading}
+                                    className="flex items-center gap-2"
+                                >
+                                    <X size={16} />
+                                    Cancel
+                                </Button>
+                            </div>
+                        </div>
+                    </form>
                 )}
             </div>
         </div>
