@@ -1,5 +1,5 @@
 import AboutService from "@/components/section/AboutService";
-import SpecialProducts from "@/components/tabs/SpecialProducts";
+import SpecialProducts from "@/components/ui/SpecialProducts";
 import AutoSlider from "@/components/section/AutoSlider";
 import HeroSection from "@/components/section/HeroSection";
 import PromoAndDelivery from "@/components/section/PromoAndDelivery";
