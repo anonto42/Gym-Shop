@@ -86,10 +86,10 @@ export default function Sidebar({ activeTab, setActiveTab }: Props) {
                 ))}
             </div>
             {/* Logout button */}
-            <button className="absolute cursor-pointer bottom-9 left-9 text-[#125BAC] flex gap-2 items-center hover:text-blue-700 duration-200">
-                <LogOut size={18} />
-                <span className="font-medium">Logout</span>
-            </button>
+            {/*<button className="absolute cursor-pointer bottom-9 left-9 text-[#125BAC] flex gap-2 items-center hover:text-blue-700 duration-200">*/}
+            {/*    <LogOut size={18} />*/}
+            {/*    <span className="font-medium">Logout</span>*/}
+            {/*</button>*/}
         </div>
     );
 }
