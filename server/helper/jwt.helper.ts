@@ -7,7 +7,7 @@ import { cookies } from 'next/headers';
 export async function setCookie({name = "GYM_Shop", value, maxAge = 12000 }: {name?: string, value: string, maxAge?: number}): Promise<void>{
     const cookieStore = await cookies();
     cookieStore.set(name, value, {
-        httpOnly: true,
+        httpOnly: false,
         secure: process.env.NODE_ENV === 'production',
         maxAge,
         path: '/',
