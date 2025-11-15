@@ -63,14 +63,14 @@ const Navbar = () => {
         </Link>
 
         {/* Desktop Search Bar */}
-        <div className="hidden md:flex items-center w-[35%] bg-white border rounded-full px-3 py-1">
-          <Search size={18} className="text-[#F27D31]" />
-          <input
-            type="text"
-            placeholder="Search for products..."
-            className="ml-2 w-full outline-none text-sm text-gray-700"
-          />
-        </div>
+        {/*<div className="hidden md:flex items-center w-[35%] bg-white border rounded-full px-3 py-1">*/}
+        {/*  <Search size={18} className="text-[#F27D31]" />*/}
+        {/*  <input*/}
+        {/*    type="text"*/}
+        {/*    placeholder="Search for products..."*/}
+        {/*    className="ml-2 w-full outline-none text-sm text-gray-700"*/}
+        {/*  />*/}
+        {/*</div>*/}
 
         {/* Desktop Nav Links */}
         <div className="hidden lg:flex items-center gap-6 text-sm font-medium">
@@ -138,14 +138,14 @@ const Navbar = () => {
               </div>
 
               {/* Search */}
-              <div className="flex items-center border border-gray-300 rounded-full px-3 py-2 mb-6">
-                <Search size={18} className="text-gray-500" />
-                <input
-                  type="text"
-                  placeholder="Search..."
-                  className="ml-2 w-full outline-none text-sm bg-transparent"
-                />
-              </div>
+              {/*<div className="flex items-center border border-gray-300 rounded-full px-3 py-2 mb-6">*/}
+              {/*  <Search size={18} className="text-gray-500" />*/}
+              {/*  <input*/}
+              {/*    type="text"*/}
+              {/*    placeholder="Search..."*/}
+              {/*    className="ml-2 w-full outline-none text-sm bg-transparent"*/}
+              {/*  />*/}
+              {/*</div>*/}
 
               {/* Links */}
               <div className="flex flex-col gap-4 text-gray-800 font-medium">
