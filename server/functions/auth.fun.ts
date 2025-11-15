@@ -62,7 +62,7 @@ export async function signInServerSide ( body: ISignInInput ): Promise<string | 
         if ( user.status == USER_STATUS.BLOCKED || user.status == USER_STATUS.DELETED ) return SendResponse({ isError: true, status: 423, message: `Your mail was ${user.status}!` });
 
         const response: boolean | { isError: boolean, status: number, message: string } = await UserModel.isPasswordMac(email,password);
-        if( typeof response != "boolean" && response.isError == true ){
+        if( typeof response != "boolean"){
             return SendResponse({
                 isError: response.isError,
                 status: response.status,
