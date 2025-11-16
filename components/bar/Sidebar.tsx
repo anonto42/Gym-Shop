@@ -1,5 +1,5 @@
 "use client";
-import { Contact2, LogOut, MessageCircle, Package2, User } from "lucide-react";
+import { Contact2, MessageCircle, Package2, User } from "lucide-react";
 import { BiSolidOffer } from "react-icons/bi";
 import { FcPrivacy } from "react-icons/fc";
 import { GrDashboard } from "react-icons/gr";
