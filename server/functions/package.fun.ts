@@ -105,20 +105,62 @@ export async function createPackageServerSide(body: ICreatePackageInput): Promis
     }
 }
 
-export async function getAllPackagesServerSide(): Promise<IPackageResponse> {
+export async function getAllPackagesServerSide({
+                                                   filter = {},
+                                                   page = 1,
+                                                   limit = 12
+                                               }: {
+    filter?: Record<string, unknown>;
+    page?: number;
+    limit?: number;
+}) {
     try {
         await connectToDB();
 
-        const packages = await PackageModel.find().sort({ createdAt: -1 }).exec();
+        // Calculate skip for pagination
+        const skip = (page - 1) * limit;
+
+        // Build the query
+        let query = PackageModel.find().lean();
+
+        // Apply filters
+        if (Object.keys(filter).length > 0) {
+            query = query.find(filter);
+        }
+
+        // Execute query with pagination and sorting
+        const [packages, total] = await Promise.all([
+            query
+                .sort({ createdAt: -1 })
+                .skip(skip)
+                .limit(limit)
+                .exec(),
+            PackageModel.countDocuments(query.getFilter()).lean()
+        ]);
+
+        // Calculate pagination info
+        const totalPages = Math.ceil(total / limit);
+        const hasNext = page < totalPages;
+        const hasPrev = page > 1;
 
         // Convert all packages to plain objects
         const plainPackages = packages.map(pkg => convertToPlainObject(pkg));
 
-        return SendResponse({ 
-            isError: false, 
-            status: 200, 
+        return SendResponse({
+            isError: false,
+            status: 200,
             message: "Packages fetched successfully",
-            data: { packages: plainPackages }
+            data: {
+                packages: plainPackages,
+                pagination: {
+                    page,
+                    limit,
+                    total,
+                    totalPages,
+                    hasNext,
+                    hasPrev
+                }
+            }
         });
 
     } catch (error) {
