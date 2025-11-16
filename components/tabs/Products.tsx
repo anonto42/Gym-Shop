@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect, useRef, useCallback } from "react";
 import { Button } from "@/components/ui/button";
 import { Plus, Edit, Trash2, Star, Upload, X } from "lucide-react";
 import {
@@ -11,8 +11,8 @@ import {
 } from "@/server/functions/product.fun";
 import { toast } from "sonner";
 import { IProduct } from "@/server/models/product/product.interface";
-import {uploadMultipleToCloudinary} from "@/server/helper/cloudinary.helper";
-import ImageWithSkeleton from "@/components/ui/ImageWIthSkeleton";
+import { uploadMultipleToCloudinary } from "@/server/helper/cloudinary.helper";
+import Image from "next/image";
 
 interface FormData {
     title: string;
@@ -72,7 +72,6 @@ const convertToPlainObject = (doc: unknown): unknown => {
     return doc;
 };
 
-
 export default function ProductManagement() {
     const [products, setProducts] = useState<IProduct[]>([]);
     const [loading, setLoading] = useState(true);
@@ -114,12 +113,7 @@ export default function ProductManagement() {
         isFeatured: false
     });
 
-    useEffect(() => {
-        setIsMounted(true);
-        loadProducts(1, true);
-    }, []);
-
-    const loadProducts = async (page: number, initialLoad: boolean = false) => {
+    const loadProducts = useCallback(async (page: number, initialLoad: boolean = false) => {
         try {
             if (initialLoad) {
                 setLoading(true);
@@ -159,9 +153,14 @@ export default function ProductManagement() {
             setLoading(false);
             setLoadingMore(false);
         }
-    };
+    }, [pagination.limit]);
 
-    const handleAddNew = () => {
+    useEffect(() => {
+        setIsMounted(true);
+        loadProducts(1, true);
+    }, [loadProducts]);
+
+    const handleAddNew = useCallback(() => {
         setEditingProduct(null);
         setFormData({
             title: "",
@@ -181,9 +180,9 @@ export default function ProductManagement() {
         setPreviewImages([]);
         setSelectedFiles([]);
         setIsModalOpen(true);
-    };
+    }, []);
 
-    const handleEdit = (product: IProduct) => {
+    const handleEdit = useCallback((product: IProduct) => {
         setEditingProduct(product);
         setFormData({
             title: product.title,
@@ -203,9 +202,9 @@ export default function ProductManagement() {
         setPreviewImages(product.images);
         setSelectedFiles([]);
         setIsModalOpen(true);
-    };
+    }, []);
 
-    const handleDelete = async (productId: string) => {
+    const handleDelete = useCallback(async (productId: string) => {
         if (!confirm("Are you sure you want to delete this product?")) return;
 
         try {
@@ -221,9 +220,9 @@ export default function ProductManagement() {
             console.error("Error deleting product:", error);
             toast.error("Failed to delete product");
         }
-    };
+    }, []);
 
-    const handleFileSelect = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const handleFileSelect = useCallback((event: React.ChangeEvent<HTMLInputElement>) => {
         const files = event.target.files;
         if (!files) return;
 
@@ -238,9 +237,9 @@ export default function ProductManagement() {
         if (fileInputRef.current) {
             fileInputRef.current.value = "";
         }
-    };
+    }, []);
 
-    const removeImage = (index: number) => {
+    const removeImage = useCallback((index: number) => {
         // Revoke the object URL to avoid memory leaks
         if (index < previewImages.length && !formData.images.includes(previewImages[index])) {
             URL.revokeObjectURL(previewImages[index]);
@@ -248,10 +247,10 @@ export default function ProductManagement() {
 
         setPreviewImages(prev => prev.filter((_, i) => i !== index));
         setSelectedFiles(prev => prev.filter((_, i) => i !== index));
-    };
+    }, [previewImages, formData.images]);
 
     // Upload images to Cloudinary
-    const uploadImagesToCloudinary = async (): Promise<string[]> => {
+    const uploadImagesToCloudinary = useCallback(async (): Promise<string[]> => {
         if (selectedFiles.length === 0) {
             return formData.images; // Return existing images if no new files
         }
@@ -270,9 +269,9 @@ export default function ProductManagement() {
         } finally {
             setImageUploading(false);
         }
-    };
+    }, [selectedFiles, formData.images]);
 
-    const addSpecification = () => {
+    const addSpecification = useCallback(() => {
         if (newSpecKey.trim() && newSpecValue.trim()) {
             setFormData(prev => ({
                 ...prev,
@@ -284,17 +283,17 @@ export default function ProductManagement() {
             setNewSpecKey("");
             setNewSpecValue("");
         }
-    };
+    }, [newSpecKey, newSpecValue]);
 
-    const removeSpecification = (key: string) => {
+    const removeSpecification = useCallback((key: string) => {
         setFormData(prev => {
             const newSpecs = { ...prev.specifications };
             delete newSpecs[key];
             return { ...prev, specifications: newSpecs };
         });
-    };
+    }, []);
 
-    const addTag = () => {
+    const addTag = useCallback(() => {
         if (newTag.trim()) {
             setFormData(prev => ({
                 ...prev,
@@ -302,16 +301,16 @@ export default function ProductManagement() {
             }));
             setNewTag("");
         }
-    };
+    }, [newTag]);
 
-    const removeTag = (tagToRemove: string) => {
+    const removeTag = useCallback((tagToRemove: string) => {
         setFormData(prev => ({
             ...prev,
             tags: prev.tags.filter(tag => tag !== tagToRemove)
         }));
-    };
+    }, []);
 
-    const handleSubmit = async (e: React.FormEvent) => {
+    const handleSubmit = useCallback(async (e: React.FormEvent) => {
         e.preventDefault();
         setFormLoading(true);
 
@@ -363,17 +362,24 @@ export default function ProductManagement() {
         } finally {
             setFormLoading(false);
         }
-    };
+    }, [
+        formData,
+        selectedFiles,
+        uploadImagesToCloudinary,
+        editingProduct,
+        previewImages,
+        loadProducts
+    ]);
 
-    const handleInputChange = (field: keyof FormData, value: any) => {
+    const handleInputChange = useCallback((field: keyof FormData, value: string | boolean | number | string[] | Record<string, string>) => {
         setFormData(prev => ({ ...prev, [field]: value }));
-    };
+    }, []);
 
-    const handleRatingChange = (rating: number) => {
+    const handleRatingChange = useCallback((rating: number) => {
         setFormData(prev => ({ ...prev, rating }));
-    };
+    }, []);
 
-    const handleScroll = () => {
+    const handleScroll = useCallback(() => {
         if (!scrollContainerRef.current || loadingMore || !pagination.hasNext) return;
 
         const container = scrollContainerRef.current;
@@ -382,7 +388,7 @@ export default function ProductManagement() {
         if (scrollHeight - scrollTop <= clientHeight + 100) {
             loadProducts(pagination.page + 1);
         }
-    };
+    }, [loadingMore, pagination.hasNext, pagination.page, loadProducts]);
 
     useEffect(() => {
         const container = scrollContainerRef.current;
@@ -390,7 +396,7 @@ export default function ProductManagement() {
             container.addEventListener("scroll", handleScroll);
             return () => container.removeEventListener("scroll", handleScroll);
         }
-    }, [loadingMore, pagination.hasNext, pagination.page]);
+    }, [handleScroll]);
 
     // Clean up preview URLs when component unmounts or modal closes
     useEffect(() => {
@@ -401,7 +407,7 @@ export default function ProductManagement() {
                 }
             });
         };
-    }, []);
+    }, [previewImages, formData.images]);
 
     if (!isMounted) {
         return (
@@ -464,14 +470,14 @@ export default function ProductManagement() {
                                     <div className="absolute top-3 left-3 flex flex-col gap-1">
                                         {!product.isActive && (
                                             <span className="bg-red-100 text-red-800 text-xs px-2 py-1 rounded-full">
-                        Inactive
-                      </span>
+                                                Inactive
+                                            </span>
                                         )}
                                         {product.isFeatured && (
                                             <span className="bg-yellow-100 text-yellow-800 text-xs px-2 py-1 rounded-full flex items-center gap-1">
-                        <Star size={12} />
-                        Featured
-                      </span>
+                                                <Star size={12} />
+                                                Featured
+                                            </span>
                                         )}
                                     </div>
 
@@ -498,9 +504,11 @@ export default function ProductManagement() {
                                     {/* Product Image */}
                                     <div className="w-full h-48 bg-gray-100 rounded-xl mb-4 overflow-hidden">
                                         {product.images && product.images.length > 0 ? (
-                                            <img
+                                            <Image
                                                 src={product.images[0]}
                                                 alt={product.title}
+                                                width={300}
+                                                height={192}
                                                 className="w-full h-full object-cover"
                                             />
                                         ) : (
@@ -520,13 +528,13 @@ export default function ProductManagement() {
 
                                     {/* Price */}
                                     <div className="flex items-center gap-2 mb-2">
-                    <span className="text-lg font-bold text-gray-900">
-                      ${product.price}
-                    </span>
+                                        <span className="text-lg font-bold text-gray-900">
+                                            ${product.price}
+                                        </span>
                                         {product.originalPrice && product.originalPrice > product.price && (
                                             <span className="text-sm text-gray-500 line-through">
-                        ${product.originalPrice}
-                      </span>
+                                                ${product.originalPrice}
+                                            </span>
                                         )}
                                     </div>
 
@@ -546,7 +554,7 @@ export default function ProductManagement() {
                                             ))}
                                         </div>
                                         <span className="text-sm text-gray-600 ml-1">
-                                          ({product.rating || 0}/5)
+                                            ({product.rating || 0}/5)
                                         </span>
                                     </div>
 
@@ -564,13 +572,13 @@ export default function ProductManagement() {
                                                     key={index}
                                                     className="bg-gray-100 text-gray-600 text-xs px-2 py-1 rounded"
                                                 >
-                          {tag}
-                        </span>
+                                                    {tag}
+                                                </span>
                                             ))}
                                             {product.tags.length > 3 && (
                                                 <span className="text-gray-400 text-xs">
-                          +{product.tags.length - 3} more
-                        </span>
+                                                    +{product.tags.length - 3} more
+                                                </span>
                                             )}
                                         </div>
                                     )}
@@ -730,8 +738,8 @@ export default function ProductManagement() {
                                                     ))}
                                                 </div>
                                                 <span className="text-sm text-gray-600">
-                          ({formData.rating}/5)
-                        </span>
+                                                    ({formData.rating}/5)
+                                                </span>
                                             </div>
                                         </div>
                                     </div>
@@ -772,9 +780,11 @@ export default function ProductManagement() {
                                                     <div className="grid grid-cols-3 gap-2">
                                                         {previewImages.map((src, index) => (
                                                             <div key={index} className="relative group">
-                                                                <img
+                                                                <Image
                                                                     src={src}
                                                                     alt={`Preview ${index + 1}`}
+                                                                    width={100}
+                                                                    height={80}
                                                                     className="w-full h-20 object-cover rounded"
                                                                 />
                                                                 <Button
@@ -815,15 +825,15 @@ export default function ProductManagement() {
                                                     key={index}
                                                     className="bg-blue-100 text-blue-800 text-sm px-3 py-1 rounded-full flex items-center gap-1"
                                                 >
-                          {tag}
+                                                    {tag}
                                                     <button
                                                         type="button"
                                                         onClick={() => removeTag(tag)}
                                                         className="hover:text-blue-900"
                                                     >
-                            <X size={14} />
-                          </button>
-                        </span>
+                                                        <X size={14} />
+                                                    </button>
+                                                </span>
                                             ))}
                                         </div>
                                     </div>
@@ -880,11 +890,11 @@ export default function ProductManagement() {
                                                     formData.isActive ? "bg-blue-600" : "bg-gray-200"
                                                 }`}
                                             >
-                        <span
-                            className={`inline-block h-4 w-4 transform rounded-full bg-white transition ${
-                                formData.isActive ? "translate-x-6" : "translate-x-1"
-                            }`}
-                        />
+                                                <span
+                                                    className={`inline-block h-4 w-4 transform rounded-full bg-white transition ${
+                                                        formData.isActive ? "translate-x-6" : "translate-x-1"
+                                                    }`}
+                                                />
                                             </button>
                                         </div>
 
@@ -897,11 +907,11 @@ export default function ProductManagement() {
                                                     formData.isFeatured ? "bg-yellow-600" : "bg-gray-200"
                                                 }`}
                                             >
-                        <span
-                            className={`inline-block h-4 w-4 transform rounded-full bg-white transition ${
-                                formData.isFeatured ? "translate-x-6" : "translate-x-1"
-                            }`}
-                        />
+                                                <span
+                                                    className={`inline-block h-4 w-4 transform rounded-full bg-white transition ${
+                                                        formData.isFeatured ? "translate-x-6" : "translate-x-1"
+                                                    }`}
+                                                />
                                             </button>
                                         </div>
                                     </div>
