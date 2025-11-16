@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect, useMemo } from "react";
+import React, { useState, useEffect, useMemo, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Filter, Search, X, Star, Loader } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -48,7 +48,7 @@ function ShopPage() {
         [products]);
 
     // Load products function - UPDATED with server-side rating filtering
-    const loadProducts = async (page: number = 1, isInitialLoad: boolean = false) => {
+    const loadProducts = useCallback(async (page: number = 1, isInitialLoad: boolean = false) => {
         try {
             if (isInitialLoad) {
                 setLoading(true);
@@ -130,30 +130,38 @@ function ShopPage() {
             setLoading(false);
             setLoadingMore(false);
         }
-    };
+    }, [
+        searchQuery,
+        priceRange,
+        selectedBrands,
+        selectedCategories,
+        stockStatus,
+        minRating,
+        pagination.limit
+    ]);
 
     // Load products on component mount and when filters change - UPDATED
     useEffect(() => {
         loadProducts(1, true);
-    }, [searchQuery, priceRange, selectedBrands, selectedCategories, stockStatus, minRating]); // Added minRating to dependencies
+    }, [loadProducts]);
 
     // Load more products for infinite scroll
-    const loadMoreProducts = () => {
+    const loadMoreProducts = useCallback(() => {
         if (pagination.hasNext && !loadingMore) {
             loadProducts(pagination.page + 1);
         }
-    };
+    }, [pagination.hasNext, pagination.page, loadingMore, loadProducts]);
 
     // Handle scroll for infinite loading
-    const handleScroll = (e: React.UIEvent<HTMLDivElement>) => {
+    const handleScroll = useCallback((e: React.UIEvent<HTMLDivElement>) => {
         const { scrollTop, scrollHeight, clientHeight } = e.currentTarget;
         if (scrollHeight - scrollTop <= clientHeight + 100) {
             loadMoreProducts();
         }
-    };
+    }, [loadMoreProducts]);
 
     // Clear all filters
-    const clearAllFilters = () => {
+    const clearAllFilters = useCallback(() => {
         setPriceRange([0, 1000]);
         setSelectedBrands([]);
         setSelectedCategories([]);
@@ -161,23 +169,23 @@ function ShopPage() {
         setMinRating(0);
         setSearchQuery("");
         setBrandSearch("");
-    };
+    }, []);
 
-    const toggleBrand = (brand: string) => {
+    const toggleBrand = useCallback((brand: string) => {
         setSelectedBrands(prev =>
             prev.includes(brand)
                 ? prev.filter(b => b !== brand)
                 : [...prev, brand]
         );
-    };
+    }, []);
 
-    const toggleCategory = (category: string) => {
+    const toggleCategory = useCallback((category: string) => {
         setSelectedCategories(prev =>
             prev.includes(category)
                 ? prev.filter(c => c !== category)
                 : [...prev, category]
         );
-    };
+    }, []);
 
     const hasActiveFilters =
         priceRange[0] > 0 ||
@@ -461,8 +469,6 @@ const FilterSidebar = ({
                            setStockStatus,
                            minRating,
                            setMinRating,
-                           clearAllFilters,
-                           hasActiveFilters,
                            availableBrands,
                            availableCategories,
                            brandSearch,
