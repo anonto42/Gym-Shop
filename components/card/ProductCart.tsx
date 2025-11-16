@@ -62,8 +62,8 @@ function ProductCart({
                 <div className="flex flex-col items-center gap-1 mt-1">
                     {brand && (
                         <span className="text-xs text-gray-600 bg-gray-100 px-2 py-1 rounded-full">
-                      {brand}
-                    </span>
+                            {brand}
+                        </span>
                     )}
                     <h3 className="text-xs sm:text-sm text-gray-500">{category}</h3>
                 </div>
@@ -84,7 +84,7 @@ function ProductCart({
                                 />
                             ))}
                         </div>
-                        <span className="text-xs text-gray-600 ml-1">({rating || 0}/5)</span>
+                        <span className="text-xs text-gray-600 ml-1">({rating}/5)</span>
                     </div>
                 )}
 
@@ -110,9 +110,9 @@ function ProductCart({
                     {priceAfterDiscount}
                     {" /"}
                     <span className="text-red-500 line-through text-xs sm:text-sm flex items-center ml-1">
-            <TbCurrencyTaka />
+                        <TbCurrencyTaka />
                         {price}
-          </span>
+                    </span>
                 </h2>
             </div>
 
