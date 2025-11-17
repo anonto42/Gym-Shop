@@ -134,6 +134,7 @@ export async function getAllPackagesServerSide({
                 .sort({ createdAt: -1 })
                 .skip(skip)
                 .limit(limit)
+                .lean()
                 .exec(),
             PackageModel.countDocuments(query.getFilter()).lean()
         ]);
