@@ -1,4 +1,5 @@
 "use client";
+
 import Image from "next/image";
 import { TbCurrencyTaka } from "react-icons/tb";
 import React from "react";
@@ -6,6 +7,7 @@ import Link from "next/link";
 import { Star } from "lucide-react";
 
 interface ProductCartProps {
+    id: unknown;
     name?: string;
     category?: string;
     price?: number;
@@ -18,6 +20,7 @@ interface ProductCartProps {
 }
 
 function ProductCart({
+                         id,
                          name = "Product Name",
                          category = "Category",
                          price = 100,
@@ -118,7 +121,7 @@ function ProductCart({
 
             {/* Button */}
             <div className="p-3 pt-0">
-                <Link href={`/product/${name}`} className="cursor-pointer">
+                <Link href={`/product/${id}`} className="cursor-pointer">
                     <button
                         className={`w-full text-xs sm:text-sm py-2 rounded-md transition cursor-pointer active:scale-95 duration-100 ease-in ${
                             isActive
