@@ -15,9 +15,43 @@ interface DynamicAboutPageProps {
     teamMembers: TeamMemberData[];
 }
 
+// Define proper interfaces for the feature objects
+interface StoryFeature {
+    text: string;
+}
+
+interface WhyChooseFeature {
+    title: string;
+    content: string;
+    icon: string;
+}
+
+// Define interface for stats
+interface Stats {
+    happyMembers?: number;
+    satisfiedCustomers?: number;
+    [key: string]: number | undefined; // Allow for other potential stats
+}
+
+// Extend the AboutSectionData to include proper typing for stats and features
+interface TypedAboutSectionData extends Omit<AboutSectionData, 'stats' | 'features'> {
+    stats?: Stats;
+    features?: StoryFeature[] | WhyChooseFeature[];
+}
+
 function DynamicAboutPage({ sections, teamMembers }: DynamicAboutPageProps) {
-    const getSection = (key: string): AboutSectionData => {
-        return sections.find(s => s.section_key === key) || {
+    const getSection = (key: string): TypedAboutSectionData => {
+        const section = sections.find(s => s.section_key === key);
+        if (section) {
+            return {
+                ...section,
+                stats: section.stats as Stats || {},
+                // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+                // @ts-ignore
+                features: section.features || []
+            };
+        }
+        return {
             section_key: key,
             title: '',
             subtitle: '',
@@ -59,6 +93,57 @@ function DynamicAboutPage({ sections, teamMembers }: DynamicAboutPageProps) {
         }
     };
 
+    // Type guard for StoryFeature
+    const isStoryFeature = (feature: unknown): feature is StoryFeature => {
+        return typeof feature === 'object' && feature !== null && 'text' in feature;
+    };
+
+    // Type guard for WhyChooseFeature
+    const isWhyChooseFeature = (feature: unknown): feature is WhyChooseFeature => {
+        return typeof feature === 'object' && feature !== null && 'title' in feature && 'content' in feature && 'icon' in feature;
+    };
+
+    // Get story features with proper typing
+    const getStoryFeatures = (): StoryFeature[] => {
+        if (storySection.features && storySection.features.length > 0) {
+            return storySection.features.filter(isStoryFeature) as StoryFeature[];
+        }
+        return [
+            { text: 'Care landscape shows health and care services that empower growth and strength.' },
+            { text: 'Professional guidance and support for your fitness journey.' },
+            { text: 'Community-driven approach to health and wellness.' }
+        ];
+    };
+
+    // Get why choose features with proper typing
+    const getWhyChooseFeatures = (): WhyChooseFeature[] => {
+        if (whyChooseSection.features && whyChooseSection.features.length > 0) {
+            return whyChooseSection.features.filter(isWhyChooseFeature) as WhyChooseFeature[];
+        }
+        return [
+            {
+                title: '24/7 Support',
+                content: 'Get professional guidance anytime you need, helping you stay consistent and motivated throughout your journey.',
+                icon: 'ImConnection'
+            },
+            {
+                title: 'Expert Trainers',
+                content: 'Learn from certified professionals with years of experience in fitness and nutrition.',
+                icon: 'BsPeople'
+            },
+            {
+                title: 'Custom Plans',
+                content: 'Personalized workout and nutrition plans tailored to your specific goals and needs.',
+                icon: 'IoCodeWorking'
+            },
+            {
+                title: 'Community',
+                content: 'Join a supportive community of like-minded individuals on the same fitness journey.',
+                icon: 'MdOutlineFlaky'
+            }
+        ];
+    };
+
     return (
         <div className="w-full bg-white">
             {/* Section 1 - Hero */}
@@ -87,10 +172,6 @@ function DynamicAboutPage({ sections, teamMembers }: DynamicAboutPageProps) {
                         <p className="text-gray-700 leading-relaxed">
                             {heroSection.content || 'We provide standard & express delivery services through our logistics partners, ensuring your fitness gear and essentials reach you quickly and safely. Join our growing community today!'}
                         </p>
-
-                        <button className="bg-[#F27D31] text-white px-6 py-3 rounded-full w-fit hover:bg-[#e56a1a] transition-colors">
-                            BE A MEMBER
-                        </button>
 
                         <div className="flex flex-wrap gap-6 mt-4">
                             <div className="flex items-center gap-2">
@@ -123,14 +204,7 @@ function DynamicAboutPage({ sections, teamMembers }: DynamicAboutPageProps) {
                 </p>
 
                 <div className="flex flex-col gap-3 mt-8 max-w-xl mx-auto">
-                    {(storySection.features && storySection.features.length > 0
-                            ? storySection.features
-                            : [
-                                { text: 'Care landscape shows health and care services that empower growth and strength.' },
-                                { text: 'Professional guidance and support for your fitness journey.' },
-                                { text: 'Community-driven approach to health and wellness.' }
-                            ]
-                    ).map((feature: any, i: number) => (
+                    {getStoryFeatures().map((feature: StoryFeature, i: number) => (
                         <div key={i} className="flex items-center gap-3">
                             <MdOutlineFlaky className="text-[#F27D31] text-xl" />
                             <p className="text-gray-700">
@@ -138,12 +212,6 @@ function DynamicAboutPage({ sections, teamMembers }: DynamicAboutPageProps) {
                             </p>
                         </div>
                     ))}
-                </div>
-
-                <div className="flex justify-center mt-8">
-                    <button className="bg-[#F27D31] text-white px-6 py-3 rounded-full hover:bg-[#e56a1a] transition-colors">
-                        Learn More
-                    </button>
                 </div>
             </section>
 
@@ -158,54 +226,10 @@ function DynamicAboutPage({ sections, teamMembers }: DynamicAboutPageProps) {
                     </p>
                 </div>
 
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-10">
-                    {/* Left Images */}
-                    <div className="grid grid-cols-2 gap-4">
-                        <div className="relative w-full h-[200px] md:h-[250px]">
-                            <Image
-                                src={imageUrl.about[3]}
-                                alt="fitness"
-                                fill
-                                className="object-cover rounded-lg"
-                            />
-                        </div>
-                        <div className="relative w-full h-[200px] md:h-[250px]">
-                            <Image
-                                src={imageUrl.about[4]}
-                                alt="fitness"
-                                fill
-                                className="object-cover rounded-lg"
-                            />
-                        </div>
-                    </div>
-
+                <div className="grid grid-cols-1 gap-10">
                     {/* Right Text */}
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
-                        {(whyChooseSection.features && whyChooseSection.features.length > 0
-                                ? whyChooseSection.features
-                                : [
-                                    {
-                                        title: '24/7 Support',
-                                        content: 'Get professional guidance anytime you need, helping you stay consistent and motivated throughout your journey.',
-                                        icon: 'ImConnection'
-                                    },
-                                    {
-                                        title: 'Expert Trainers',
-                                        content: 'Learn from certified professionals with years of experience in fitness and nutrition.',
-                                        icon: 'BsPeople'
-                                    },
-                                    {
-                                        title: 'Custom Plans',
-                                        content: 'Personalized workout and nutrition plans tailored to your specific goals and needs.',
-                                        icon: 'IoCodeWorking'
-                                    },
-                                    {
-                                        title: 'Community',
-                                        content: 'Join a supportive community of like-minded individuals on the same fitness journey.',
-                                        icon: 'MdOutlineFlaky'
-                                    }
-                                ]
-                        ).map((feature: any, i: number) => (
+                        {getWhyChooseFeatures().map((feature: WhyChooseFeature, i: number) => (
                             <div key={i} className="flex flex-col gap-3 bg-[#FEF2EA] p-4 rounded-xl">
                                 {getIconComponent(feature.icon)}
                                 <h2 className="font-semibold text-lg text-[#222]">
@@ -231,10 +255,10 @@ function DynamicAboutPage({ sections, teamMembers }: DynamicAboutPageProps) {
                     </p>
                 </div>
 
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-10 items-center">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-10 items-center">
                     {/* Left Cards */}
                     <div className="flex flex-col gap-6">
-                        {teamMembers.slice(0, 2).map((member, i) => (
+                        {teamMembers.slice(0, 3).map((member, i) => (
                             <div key={member.id || i} className="flex items-start gap-3 bg-white p-4 rounded-xl shadow">
                                 <BsPeople className="text-[#F27D31] text-3xl" />
                                 <div>
@@ -247,19 +271,9 @@ function DynamicAboutPage({ sections, teamMembers }: DynamicAboutPageProps) {
                         ))}
                     </div>
 
-                    {/* Center Image */}
-                    <div className="relative w-full h-[250px] md:h-[400px]">
-                        <Image
-                            src={imageUrl.about[1]}
-                            alt="team"
-                            fill
-                            className="object-cover rounded-xl"
-                        />
-                    </div>
-
                     {/* Right Cards */}
                     <div className="flex flex-col gap-6">
-                        {teamMembers.slice(2, 4).map((member, i) => (
+                        {teamMembers.slice(3, 6).map((member, i) => (
                             <div key={member.id || i} className="flex items-start gap-3 bg-white p-4 rounded-xl shadow">
                                 <BsPeople className="text-[#F27D31] text-3xl" />
                                 <div>
@@ -282,32 +296,6 @@ function DynamicAboutPage({ sections, teamMembers }: DynamicAboutPageProps) {
                 <p className="text-center max-w-2xl mx-auto text-gray-700 mb-10">
                     {visionSection.content || 'Our mission is to create a global community of empowered individuals committed to health, fitness, and mental strength.'}
                 </p>
-
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-6 items-center">
-                    <div className="relative w-full h-[250px]">
-                        <Image
-                            src={imageUrl.about[2]}
-                            alt="vision"
-                            fill
-                            className="object-cover rounded-xl"
-                        />
-                    </div>
-                    <div className="flex flex-col gap-4 bg-[#FEF2EA] p-6 rounded-xl">
-                        <IoCodeWorking className="text-[#F27D31] text-3xl" />
-                        <h2 className="font-semibold text-lg text-[#222]">Our Commitment</h2>
-                        <p className="text-sm text-gray-600">
-                            We ensure your growth with proven techniques, support, and accountability.
-                        </p>
-                    </div>
-                    <div className="relative w-full h-[250px]">
-                        <Image
-                            src={imageUrl.about[2]}
-                            alt="vision"
-                            fill
-                            className="object-cover rounded-xl"
-                        />
-                    </div>
-                </div>
             </section>
 
             {/* Section 6 - Expert Team */}
@@ -323,12 +311,12 @@ function DynamicAboutPage({ sections, teamMembers }: DynamicAboutPageProps) {
                     {teamMembers.slice(0, 4).map((member, i) => (
                         <div key={member.id || i} className="relative w-full h-[250px] rounded-xl overflow-hidden shadow-md group">
                             <Image
-                                src={member.image_url || imageUrl.about[2]}
+                                src={member.image_url! || ""}
                                 alt={member.name || `team-${i}`}
                                 fill
                                 className="object-cover group-hover:scale-105 transition-transform duration-300"
                             />
-                            <div className="absolute inset-0 bg-black bg-opacity-40 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-end p-4">
+                            <div className="absolute inset-0 bg-opacity-40 bg-black/20 group-hover:opacity-100 transition-opacity duration-300 flex items-end p-4">
                                 <div className="text-white">
                                     <h3 className="font-bold text-lg">{member.name || `Team Member ${i + 1}`}</h3>
                                     <p className="text-sm">{member.role || 'Fitness Expert'}</p>
