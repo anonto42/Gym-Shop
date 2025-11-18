@@ -4,6 +4,7 @@ import Navbar from "../bar/Navbar";
 import Sidebar from "../bar/Sidebar";
 import BannerManagement from "../tabs/BannerMessage";
 import Loader from "../loader/Loader";
+import OrderManagement from "@/components/tabs/Order";
 
 const OverviewTab = lazy(() => import("../tabs/Overview"));
 const Hero = lazy(() => import("../tabs/Hero"));
@@ -33,7 +34,9 @@ export default function DashboardLayout() {
             case "OurTeam": return <OurTeam />;
             case "Contact": return <Contact />;
             case "User": return <UserTab />;
+            case "About Me": return <AboutMe />;
             case "PrivacyPolicy": return <PrivacyPolicy />;
+            case "Order Management": return <OrderManagement/>;
             default: return <h1>Not Found</h1>;
         }
     };

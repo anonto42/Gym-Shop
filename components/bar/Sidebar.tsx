@@ -7,6 +7,8 @@ import { MdProductionQuantityLimits } from "react-icons/md";
 import { PiFlagBanner } from "react-icons/pi";
 import { TbBrandBing } from "react-icons/tb";
 import { SVGProps, useMemo } from "react";
+import {AiFillProfile} from "react-icons/ai";
+import {FaJediOrder} from "react-icons/fa";
 
 interface Props {
     activeTab: string;
@@ -65,6 +67,14 @@ export default function Sidebar({ activeTab, setActiveTab }: Props) {
             title: "User",
             icon: () => createIconComponent(User)
         },
+        {
+            title: "About Me",
+            icon: () => createIconComponent(AiFillProfile)
+        },
+        {
+            title: "Order Management",
+            icon: () => createIconComponent(FaJediOrder)
+        }
     ], []);
 
     return (
