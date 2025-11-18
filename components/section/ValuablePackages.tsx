@@ -238,8 +238,6 @@ const ValuablePackages = () => {
                     limit: 6
                 });
 
-                console.log('response --', response);
-
                 if (!response.isError && response.data) {
                     const responseData = response.data as { packages: unknown[] };
                     const packageData = responseData.packages;
