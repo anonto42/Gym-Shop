@@ -126,7 +126,7 @@ function SpecialProducts() {
                     whileInView={{ opacity: 1, y: 0 }}
                     transition={{ duration: 0.6, staggerChildren: 0.1 }}
                     viewport={{ once: true }}
-                    className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 justify-items-center max-w-[1540px] w-full"
+                    className="flex flex-wrap gap-6 justify-center max-w-[1540px] w-full"
                 >
                     {featuredProducts.map((product, index) => (
                         <motion.div
@@ -135,10 +135,15 @@ function SpecialProducts() {
                             whileInView={{ opacity: 1, y: 0 }}
                             transition={{ duration: 0.5, delay: index * 0.1 }}
                             viewport={{ once: true }}
+                            className={"w-full max-w-[280px]"}
                         >
                             <ProductCart
+                                id={product._id}
                                 name={product.title}
                                 category={product.category}
+                                rating={product.rating}
+                                isActive={product.isActive}
+                                brand={product.brand}
                                 price={product.originalPrice || product.price + (product.price * 0.2)} // Calculate original price if not exists
                                 discount={calculateDiscount(product.price, product.originalPrice)}
                                 priceAfterDiscount={product.price}
