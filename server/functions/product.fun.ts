@@ -112,6 +112,63 @@ export async function createProductServerSide(body: ICreateProductInput): Promis
     }
 }
 
+export async function getAProductsServerSide(id: unknown): Promise<IProductResponse> {
+    try {
+        await connectToDB();
+
+        const product = await ProductModel.findById(id).lean().exec();
+        if(!product){
+            return SendResponse<IProductData>({
+                isError: true,
+                status: 404,
+                message: "Product not found."
+            });
+        }
+
+        const serializedProduct = JSON.parse(JSON.stringify(product));
+
+        return SendResponse({
+            isError: false,
+            status: 200,
+            message: "Products fetched successfully",
+            data: serializedProduct
+        });
+
+    } catch (error) {
+        return handleServerError(error) as IProductResponse;
+    }
+}
+
+export async function getRelatedProductsServerSide(
+    category: string,
+    excludeProductId: string
+): Promise<IProductResponse> {
+    try {
+        await connectToDB();
+
+        const relatedProducts = await ProductModel.find({
+            category: category,
+            _id: { $ne: excludeProductId },
+            isActive: true
+        })
+            .limit(8)
+            .lean()
+            .exec();
+
+        const serializedProducts = JSON.parse(JSON.stringify(relatedProducts));
+
+        return SendResponse({
+            isError: false,
+            status: 200,
+            message: "Related products fetched successfully",
+            data: serializedProducts
+        });
+
+    } catch (error) {
+        return handleServerError(error) as IProductResponse;
+    }
+}
+
 export async function getAllProductsServerSide({filter, page, limit}: { filter?: Record<string, unknown> | null; page: number; limit: number; }): Promise<IProductResponse> {
     try {
         await connectToDB();
