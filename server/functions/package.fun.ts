@@ -105,6 +105,88 @@ export async function createPackageServerSide(body: ICreatePackageInput): Promis
     }
 }
 
+
+export async function getAPackageServerSide(id: unknown) {
+    try {
+        await connectToDB();
+
+        const packageData = await PackageModel.findById(id).lean().exec();
+
+        if (!packageData) {
+            return {
+                isError: true,
+                status: 404,
+                message: "Package not found."
+            };
+        }
+
+        // Serialize for client component
+        const serializedPackage = JSON.parse(JSON.stringify(packageData));
+
+        return {
+            isError: false,
+            status: 200,
+            message: "Package fetched successfully",
+            data: serializedPackage
+        };
+
+    } catch (error) {
+        return handleServerError(error);
+    }
+}
+
+export async function getRelatedPackagesServerSide(
+    category: string,
+    excludePackageId: string
+) {
+    try {
+        await connectToDB();
+
+        const relatedPackages = await PackageModel.find({
+            category: category,
+            _id: { $ne: excludePackageId },
+            isActive: true
+        })
+            .limit(8)
+            .lean()
+            .exec();
+
+        // Serialize for client component
+        const serializedPackages = JSON.parse(JSON.stringify(relatedPackages));
+
+        return {
+            isError: false,
+            status: 200,
+            message: "Related packages fetched successfully",
+            data: serializedPackages
+        };
+
+    } catch (error) {
+        return handleServerError(error);
+    }
+}
+
+export async function getFeaturedPackagesServerSide() {
+    try {
+        await connectToDB();
+
+        const featuredPackages = await PackageModel.findFeaturedPackages();
+
+        // Serialize for client component
+        const serializedPackages = JSON.parse(JSON.stringify(featuredPackages));
+
+        return {
+            isError: false,
+            status: 200,
+            message: "Featured packages fetched successfully",
+            data: serializedPackages
+        };
+
+    } catch (error) {
+        return handleServerError(error);
+    }
+}
+
 export async function getAllPackagesServerSide({
                                                    filter = {},
                                                    page = 1,
@@ -182,27 +264,6 @@ export async function getActivePackagesServerSide(): Promise<IPackageResponse> {
             isError: false, 
             status: 200, 
             message: "Active packages fetched successfully",
-            data: { packages: plainPackages }
-        });
-
-    } catch (error) {
-        return handleServerError(error);
-    }
-}
-
-export async function getFeaturedPackagesServerSide(): Promise<IPackageResponse> {
-    try {
-        await connectToDB();
-
-        const packages = await PackageModel.find({ isFeatured: true, isActive: true }).sort({ createdAt: -1 }).exec();
-
-        // Convert all packages to plain objects
-        const plainPackages = packages.map(pkg => convertToPlainObject(pkg));
-
-        return SendResponse({ 
-            isError: false, 
-            status: 200, 
-            message: "Featured packages fetched successfully",
             data: { packages: plainPackages }
         });
 
