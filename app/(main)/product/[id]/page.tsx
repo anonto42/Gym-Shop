@@ -10,6 +10,10 @@ import { getAProductsServerSide, getRelatedProductsServerSide } from "@/server/f
 import { useParams, useRouter } from "next/navigation";
 import Loader from "@/components/loader/Loader";
 import { IProduct } from "@/server/models/product/product.interface";
+import {toast} from "sonner";
+import {addToCart} from "@/server/functions/cart.fun";
+import {getCookie} from "@/server/helper/jwt.helper";
+import {IUser} from "@/server/models/user/user.interfce";
 
 function ProductViewPage() {
     const [productData, setProductData] = useState<IProduct | null>(null);
@@ -116,6 +120,37 @@ function ProductViewPage() {
         }
     };
 
+    const handleAddToCart = async () => {
+        if (productData?.stock === 0) {
+            toast.warning("This product is out of stock.");
+            return;
+        }
+
+        const cookie = await getCookie("user");
+        if (!cookie) {
+            toast.error("Please login to add items to cart");
+            return;
+        }
+
+        const userCookie = JSON.parse(cookie);
+
+        const response = await addToCart({
+            userId: userCookie._id,
+            productId: productData?._id
+        });
+
+        if (response.isError) {
+            toast.error(response.message);
+            return;
+        }
+
+        toast.success(response.message);
+
+        router.push("/cart")
+    };
+
+    const directBuy = ( ) => {}
+
     if (loading) {
         return <Loader />;
     }
@@ -143,6 +178,7 @@ function ProductViewPage() {
 
     return (
         <div className="w-full min-h-screen bg-white">
+            { loading && <Loader /> }
             {/* --- Title Section --- */}
             <section className="w-full text-center p-5 max-w-[800px] mx-auto">
                 <h1 className="text-2xl md:text-3xl font-semibold text-[#F27D31] mb-3">
@@ -290,13 +326,15 @@ function ProductViewPage() {
                         {/* Action Buttons */}
                         <div className="flex flex-col sm:flex-row gap-3">
                             <button
-                                className="w-full bg-[#F27D31] text-white text-lg font-semibold py-3 rounded-md hover:bg-[#e36e20] transition disabled:opacity-50 disabled:cursor-not-allowed"
+                                onClick={()=> handleAddToCart()}
+                                className="w-full cursor-pointer bg-[#F27D31] text-white text-lg font-semibold py-3 rounded-md hover:bg-[#e36e20] transition disabled:opacity-50 disabled:cursor-not-allowed"
                                 disabled={productData.stock === 0}
                             >
                                 {productData.stock === 0 ? 'Out of Stock' : 'Add to Cart'}
                             </button>
                             <button
-                                className="w-full bg-transparent border border-[#F27D31] text-[#F27D31] text-lg font-semibold py-3 rounded-md hover:bg-[#F27D31] hover:text-white transition disabled:opacity-50 disabled:cursor-not-allowed"
+                                onClick={()=> directBuy()}
+                                className="w-full cursor-pointer bg-transparent border border-[#F27D31] text-[#F27D31] text-lg font-semibold py-3 rounded-md hover:bg-[#F27D31] hover:text-white transition disabled:opacity-50 disabled:cursor-not-allowed"
                                 disabled={productData.stock === 0}
                             >
                                 Buy Now

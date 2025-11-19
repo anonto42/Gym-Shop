@@ -14,6 +14,7 @@ interface ProductCartProps {
     discount?: number;
     priceAfterDiscount?: number;
     image: string;
+    forwardUrl?: string;
     rating?: number;
     brand?: string;
     isActive?: boolean;
@@ -21,6 +22,7 @@ interface ProductCartProps {
 
 function ProductCart({
                          id,
+                         forwardUrl = `/product/${id}`,
                          name = "Product Name",
                          category = "Category",
                          price = 100,
@@ -121,7 +123,7 @@ function ProductCart({
 
             {/* Button */}
             <div className="p-3 pt-0">
-                <Link href={`/product/${id}`} className="cursor-pointer">
+                <Link href={forwardUrl} className="cursor-pointer">
                     <button
                         className={`w-full text-xs sm:text-sm py-2 rounded-md transition cursor-pointer active:scale-95 duration-100 ease-in ${
                             isActive
