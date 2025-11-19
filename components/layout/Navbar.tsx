@@ -7,10 +7,14 @@ import { motion, AnimatePresence } from "framer-motion";
 import { usePathname } from "next/navigation";
 import TopBar from "./TopBar";
 import { createAdminServerSide } from "@/server/functions/admin.fun";
+import {countCurrentCartLength} from "@/server/functions/cart.fun";
+import {getCookie} from "@/server/helper/jwt.helper";
+import {IUser} from "@/server/models/user/user.interfce";
 
 const Navbar = () => {
   const [isOpen, setIsOpen] = useState(false);
   const [showNav, setShowNav] = useState(true);
+  const [cartCount, setCartCount] = useState<number>(0);
   const [lastScrollY, setLastScrollY] = useState(0);
   const pathname = usePathname();
 
@@ -28,6 +32,13 @@ const Navbar = () => {
   useEffect(() => {
     ( async () => {
       await createAdmin();
+
+      const cookie = await getCookie("user");
+      if ( cookie ) {
+          const user = JSON.parse(cookie) as IUser;
+          const cartLength = await countCurrentCartLength({ userId: user._id});
+          if(typeof cartLength == "number") setCartCount(cartLength);
+      }
     })();
   }, []);
 
@@ -100,7 +111,7 @@ const Navbar = () => {
           >
             <ShoppingCart size={20} />
             <span className="absolute -top-2 -right-2 bg-red-500 text-white text-xs w-4 h-4 flex items-center justify-center rounded-full">
-              2
+              {cartCount}
             </span>
           </Link>
 
