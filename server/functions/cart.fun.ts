@@ -65,3 +65,126 @@ export async function countCurrentCartLength({userId}: {userId: unknown}) {
         return handleServerError(error);
     }
 }
+
+export async function getCartItems({ userId }: { userId: unknown }) {
+    try {
+        await connectToDB();
+
+        const cartItems = await CartModel.find({
+            userId: userId,
+            isRemoved: false
+        })
+            .populate("product")
+            .populate("package")
+            .sort({ createdAt: -1 })
+            .lean()
+            .exec();
+
+        const serializedItems = JSON.parse(JSON.stringify(cartItems));
+
+        return {
+            isError: false,
+            status: 200,
+            message: "Cart items fetched successfully",
+            data: serializedItems
+        };
+
+    } catch (error) {
+        return handleServerError(error);
+    }
+}
+
+// Remove item from cart
+export async function removeFromCart({ cartId }: { cartId: unknown }) {
+    try {
+        await connectToDB();
+
+        const removedCart = await CartModel.findByIdAndUpdate(
+            cartId,
+            {
+                isActive: false,
+                isRemoved: true
+            },
+            { new: true }
+        ).exec();
+
+        if (!removedCart) {
+            return {
+                isError: true,
+                status: 404,
+                message: "Cart item not found",
+                data: null
+            };
+        }
+
+        return {
+            isError: false,
+            status: 200,
+            message: "Item removed from cart successfully",
+            data: removedCart
+        };
+
+    } catch (error) {
+        return handleServerError(error);
+    }
+}
+
+// Update cart quantity
+export async function updateCartQuantity({ cartId, quantity }: { cartId: unknown, quantity: number }) {
+    try {
+        await connectToDB();
+
+        const updatedCart = await CartModel.findByIdAndUpdate(
+            cartId,
+            { quantity: quantity },
+            { new: true }
+        ).exec();
+
+        if (!updatedCart) {
+            return {
+                isError: true,
+                status: 404,
+                message: "Cart item not found",
+                data: null
+            };
+        }
+
+        return {
+            isError: false,
+            status: 200,
+            message: "Quantity updated successfully",
+            data: updatedCart
+        };
+
+    } catch (error) {
+        return handleServerError(error);
+    }
+}
+
+// Clear entire cart
+export async function clearCart({ userId }: { userId: unknown }) {
+    try {
+        await connectToDB();
+
+        const result = await CartModel.updateMany(
+            {
+                userId: userId,
+                isActive: true
+            },
+            {
+                isActive: false,
+                isRemoved: true
+            }
+        ).exec();
+
+        return {
+            isError: false,
+            status: 200,
+            message: "Cart cleared successfully",
+            data: { deletedCount: result.modifiedCount }
+        };
+
+    } catch (error) {
+        return handleServerError(error);
+    }
+}
