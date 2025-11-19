@@ -437,6 +437,7 @@ function OfferPage() {
                                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
                                     {filteredPackages.map((pkg) => (
                                         <ProductCart
+                                            id={pkg._id}
                                             key={pkg._id?.toString() || Math.random().toString()}
                                             image={pkg.imageUrl && pkg.imageUrl.length > 0 ? pkg.imageUrl[0] : "/placeholder-image.jpg"}
                                             name={pkg.title}
@@ -447,6 +448,7 @@ function OfferPage() {
                                             rating={pkg.rating || 0}
                                             isActive={pkg.isActive}
                                             brand={pkg.category}
+                                            forwardUrl={`/package/${pkg._id.toString()}`}
                                         />
                                     ))}
                                 </div>
