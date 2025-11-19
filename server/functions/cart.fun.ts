@@ -8,15 +8,14 @@ export async function addToCart({userId, productId, packageId}: {userId: unknown
     try {
         await connectToDB();
 
-        const query: Record<string, unknown> = { userId: userId }
+        // Build query dynamically based on what's provided
+        const query: any = { userId: userId };
 
-        if (productId && packageId) {
-            query.$or = [{ product: productId }, { package: packageId }];
-        } else if (productId) {
-            query.product = productId;
-        } else if (packageId) {
-            query.package = packageId;
-        } else {
+        const orConditions = [];
+        if (productId) orConditions.push({ product: productId });
+        if (packageId) orConditions.push({ package: packageId });
+
+        if (orConditions.length === 0) {
             return {
                 isError: true,
                 status: 400,
@@ -24,6 +23,8 @@ export async function addToCart({userId, productId, packageId}: {userId: unknown
                 data: null
             };
         }
+
+        query.$or = orConditions;
 
         const cart = await CartModel.findOne(query).populate("product package").lean();
 
@@ -33,13 +34,13 @@ export async function addToCart({userId, productId, packageId}: {userId: unknown
                 status: 400,
                 message: "This item is already in your cart",
                 data: cart
-            }
+            };
         }
 
         const createdCart = await CartModel.create({
             userId: userId,
-            product: productId,
-            package: packageId
+            product: productId || null,
+            package: packageId || null
         });
 
         return {
