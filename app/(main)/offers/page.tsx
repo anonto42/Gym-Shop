@@ -706,7 +706,7 @@ const FilterSidebar = ({
                                 step="1"
                                 value={localPriceRange[0]}
                                 onChange={(e) => handlePriceRangeChange([parseInt(e.target.value), localPriceRange[1]])}
-                                className="absolute w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer z-20"
+                                className="absolute w-full top-4 h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer z-20"
                                 disabled={isLoading}
                             />
                             <input
@@ -729,7 +729,7 @@ const FilterSidebar = ({
                         </div>
                     </div>
 
-                    <div className="flex gap-2">
+                    <div className="flex gap-2 mt-12">
                         <div className="flex-1">
                             <label className="text-xs text-gray-500 block mb-1">Min Price</label>
                             <input
