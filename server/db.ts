@@ -1,54 +1,51 @@
-import mongoose from 'mongoose';
+import mongoose, { ConnectOptions } from 'mongoose';
 
-const MONGODB_URI = process.env.MONGODB_URI || 'mongodb://localhost:27017';
-
-if (!MONGODB_URI) {
-    throw new Error('Please define MONGODB_URI in .env.local');
-}
-
-// Global cache for Mongoose connection
 interface MongooseCache {
     conn: typeof mongoose | null;
     promise: Promise<typeof mongoose> | null;
 }
 
-// Use global to persist connection across hot reloads in development
-declare global {
-    var mongoose: MongooseCache | undefined;
-}
-
-const cached: MongooseCache = global.mongoose || {
+const mongooseCache: MongooseCache = {
     conn: null,
     promise: null,
 };
 
-if (!global.mongoose) {
-    global.mongoose = cached;
+const MONGODB_URI = process.env.MONGODB_URI as string;
+
+if (!MONGODB_URI) {
+    throw new Error(
+        'Please define the MONGODB_URI environment variable inside .env.local.local'
+    );
 }
 
-export async function connectToDB() {
+export async function connectToDB(): Promise<typeof mongoose> {
     // If we have a cached connection, return it
-    if (cached.conn) {
-        return cached.conn;
+    if (mongooseCache.conn) {
+        return mongooseCache.conn;
     }
 
-    // If no promise exists, create a new connection
-    if (!cached.promise) {
-        const opts = {
-            bufferCommands: false, // Disable mongoose buffering
-        };
-
-        cached.promise = mongoose.connect(MONGODB_URI, opts);
+    // If we have a pending connection promise, wait for it
+    if (mongooseCache.promise) {
+        mongooseCache.conn = await mongooseCache.promise;
+        return mongooseCache.conn;
     }
+
+    // Create new connection promise
+    const opts: ConnectOptions = {
+        bufferCommands: false,
+    };
+
+    mongooseCache.promise = mongoose.connect(MONGODB_URI, opts);
 
     try {
-        // Wait for the connection promise to resolve
-        cached.conn = await cached.promise;
-    } catch (error) {
-        // If connection fails, reset the promise
-        cached.promise = null;
-        throw error;
+        mongooseCache.conn = await mongooseCache.promise;
+    } catch (e) {
+        // Reset promise on error to allow retries
+        mongooseCache.promise = null;
+        throw e;
     }
 
-    return cached.conn;
+    return mongooseCache.conn;
 }
+
+export default connectToDB;
