@@ -6,6 +6,7 @@ import { UserCircle } from "lucide-react";
 import {isAuthenticatedAndGetUser} from "@/server/functions/auth.fun";
 import {IUser} from "@/server/models/user/user.interfce";
 import {getCookie, setCookie} from "@/server/helper/jwt.helper";
+import {USER_ROLE} from "@/enum/user.enum";
 
 const TopBar = () => {
   const [user, setUser] = useState<IUser | null>(null);
@@ -46,7 +47,7 @@ const TopBar = () => {
             {
                 user?
                     (
-                        <Link href="/profile" className="hover:underline" title={"Profile"}>
+                        <Link href={ user.role == USER_ROLE.ADMIN ? "/dashboard" : "/profile"} className="hover:underline" title={"Profile"}>
                             <UserCircle size={16} />
                         </Link>
                     )   :
