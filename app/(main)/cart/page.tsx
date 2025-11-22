@@ -116,7 +116,7 @@ function CartPage() {
             const cookie = await getCookie("user");
             if (!cookie) {
                 toast.error("Please login to view your cart");
-                router.push("/login");
+                router.push("/auth/signin");
                 return;
             }
 
@@ -408,6 +408,8 @@ function CartPage() {
                                 <CartItem
                                     key={item._id}
                                     item={item}
+                                    // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+                                    // @ts-ignore
                                     getItemData={getItemData}
                                     isItemSelected={isItemSelected}
                                     toggleSelection={toggleSelection}

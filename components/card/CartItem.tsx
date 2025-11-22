@@ -4,28 +4,40 @@ import React from "react";
 import Image from "next/image";
 import { Check, Trash2, Plus, Minus } from "lucide-react";
 
+// Define proper interfaces instead of using 'any'
+interface ProductData {
+    _id: string;
+    title: string;
+    price: number;
+    images: string[];
+    description: string;
+    stock: number;
+}
+
+interface PackageData {
+    _id: string;
+    title: string;
+    price: number;
+    imageUrl: string[];
+    description: string;
+}
+
+interface CartItemData {
+    data: ProductData | PackageData;
+    image: string;
+    type: "product" | "package";
+    maxStock?: number;
+}
+
 interface CartItemProps {
     item: {
         _id: string;
-        product?: {
-            _id: string;
-            title: string;
-            price: number;
-            images: string[];
-            description: string;
-            stock: number;
-        };
-        package?: {
-            _id: string;
-            title: string;
-            price: number;
-            imageUrl: string[];
-            description: string;
-        };
+        product?: ProductData;
+        package?: PackageData;
         quantity: number;
         isActive: boolean;
     };
-    getItemData: (item: any) => any;
+    getItemData: (item: CartItemProps["item"]) => CartItemData;
     isItemSelected: (id: string) => boolean;
     toggleSelection: (id: string) => void;
     isItemUpdating: (id: string) => boolean;
