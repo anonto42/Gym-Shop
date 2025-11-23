@@ -4,7 +4,7 @@ import ProductCart from "@/components/card/ProductCart";
 import imageUrl from "@/const/imageUrl";
 import { Minus, Plus } from "lucide-react";
 import Image from "next/image";
-import React, {useEffect, useLayoutEffect, useState} from "react";
+import React, {useEffect, useLayoutEffect, useState, useCallback} from "react";
 import { FaStar, FaStarHalfAlt, FaRegStar, FaCheck } from "react-icons/fa";
 import { useParams, useRouter } from "next/navigation";
 import Loader from "@/components/loader/Loader";
@@ -27,24 +27,6 @@ function PackageViewPage() {
     const [isOrderModalOpen, setIsOrderModalOpen] = useState(false);
     const [user, setUser] = useState<IUser | null>(null);
 
-    useLayoutEffect(() => {
-        ;( async ()=> {
-            const cookie = await getCookie("user");
-            if (typeof cookie == 'string' ) return setUser( JSON.parse(cookie) );
-            else {
-                const res = await isAuthenticatedAndGetUser();
-                if ( typeof res != "string" && res.isError == true) {
-                    setUser(null)
-                    return;
-                } else if ( typeof res == "string" ) {
-                    await setCookie({name:"user", value: res });
-                    setUser(JSON.parse(res));
-                    return;
-                }
-            }
-        })()
-    },[]);
-
     const { id } = useParams();
     const router = useRouter();
 
@@ -55,8 +37,8 @@ function PackageViewPage() {
 
     const mainImage = packageData?.imageUrl?.[selectedImageIndex] || imageUrl.packageImage.image1;
 
-    // Fetch main package
-    const fetchPackage = async () => {
+    // Fetch main package with useCallback to prevent infinite re-renders
+    const fetchPackage = useCallback(async () => {
         if (!id) return;
         setLoading(true);
 
@@ -77,10 +59,10 @@ function PackageViewPage() {
         } finally {
             setLoading(false);
         }
-    }
+    }, [id, router]);
 
     // Fetch related packages when packageData updates
-    const fetchRelatedPackages = async (category: string, packageId: string) => {
+    const fetchRelatedPackages = useCallback(async (category: string, packageId: string) => {
         try {
             const relatedResponse = await getRelatedPackagesServerSide(
                 category,
@@ -93,21 +75,40 @@ function PackageViewPage() {
         } catch (error) {
             console.error("Error fetching related packages:", error);
         }
-    }
+    }, []);
+
+    // Get user authentication
+    useLayoutEffect(() => {
+        ;( async ()=> {
+            const cookie = await getCookie("user");
+            if (typeof cookie == 'string' ) return setUser( JSON.parse(cookie) );
+            else {
+                const res = await isAuthenticatedAndGetUser();
+                if ( typeof res != "string" && res.isError == true) {
+                    setUser(null)
+                    return;
+                } else if ( typeof res == "string" ) {
+                    await setCookie({name:"user", value: res });
+                    setUser(JSON.parse(res));
+                    return;
+                }
+            }
+        })()
+    },[]);
 
     // Initial data fetch
     useEffect(() => {
         if (id) {
             fetchPackage();
         }
-    }, [id]);
+    }, [id, fetchPackage]);
 
     // Fetch related packages when packageData is available
     useEffect(() => {
         if (packageData?.category && packageData?._id) {
             fetchRelatedPackages(packageData.category, packageData._id);
         }
-    }, [packageData?.category, packageData?._id]);
+    }, [packageData?.category, packageData?._id, fetchRelatedPackages]);
 
     // Set client-side flag
     useEffect(() => {
@@ -168,6 +169,21 @@ function PackageViewPage() {
         }
         setIsOrderModalOpen(true);
     }
+
+    // Prepare items for OrderModal
+    const getOrderModalItems = () => {
+        if (!packageData) return [];
+
+        return [{
+            package: packageData._id as string,
+            product: undefined,
+            quantity: quantity,
+            price: packageData.price,
+            title: packageData.title,
+            image: packageData.imageUrl?.[0] || imageUrl.packageImage.image1,
+            type: "package" as const
+        }];
+    };
 
     if (loading) {
         return <Loader />;
@@ -366,18 +382,6 @@ function PackageViewPage() {
                             >
                                 Buy Now
                             </button>
-
-                            <OrderModal
-                                isOpen={isOrderModalOpen}
-                                onClose={() => setIsOrderModalOpen(false)}
-                                item={{
-                                    ...packageData,
-                                    type: "package",
-                                    imageUrl: packageData.imageUrl
-                                }}
-                                quantity={quantity}
-                                userId={user?._id ?? ""}
-                            />
                         </div>
                     </div>
                 </div>
@@ -407,6 +411,26 @@ function PackageViewPage() {
                     </div>
                 </section>
             )}
+
+            {/* Order Modal */}
+            <OrderModal
+                isOpen={isOrderModalOpen}
+                onClose={() => setIsOrderModalOpen(false)}
+                items={getOrderModalItems()}
+                userId={user?._id ?? ""}
+                shippingInfo={{
+                    provider: "Redx",
+                    area: "Standard",
+                    district: "To be selected",
+                    cost: 0,
+                    deliveryTime: "3-5 days"
+                }}
+                orderSummary={{
+                    subtotal: packageData ? packageData.price * quantity : 0,
+                    shipping: 0,
+                    total: packageData ? packageData.price * quantity : 0
+                }}
+            />
         </div>
     );
 }

@@ -1,8 +1,8 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import { useRouter } from "next/navigation";
-import { Check, ShoppingBag } from "lucide-react";
+import { Check, ShoppingBag, Truck, MapPin } from "lucide-react";
 import { toast } from "sonner";
 import { getCookie } from "@/server/helper/jwt.helper";
 import { getCartItems, removeFromCart, updateCartQuantity } from "@/server/functions/cart.fun";
@@ -10,12 +10,14 @@ import { IProduct } from "@/server/models/product/product.interface";
 import { IPackage } from "@/server/models/package/package.interface";
 import imageUrl from "@/const/imageUrl";
 import CartItem from "@/components/card/CartItem";
+import OrderModal from "@/components/modal/OrderModal";
+import { removeCartItemsAfterOrder } from "@/server/functions/order.fun";
 
 // Unified cart item type
 interface CartItemType {
     _id: string;
-    product?: IProduct & { _id: string };
-    package?: IPackage & { _id: string };
+    product?: IProduct & { _id: unknown };
+    package?: IPackage & { _id: unknown };
     quantity: number;
     isActive: boolean;
 }
@@ -42,6 +44,108 @@ interface ItemQuantityState {
     };
 }
 
+// Delivery areas and prices
+interface DeliveryArea {
+    name: string;
+    price: number;
+    deliveryTime: string;
+    districts: string[];
+}
+
+const DELIVERY_AREAS: DeliveryArea[] = [
+    {
+        name: "Dhaka Metropolitan",
+        price: 60,
+        deliveryTime: "1-2 days",
+        districts: ["Dhaka", "Gazipur", "Narayanganj", "Savar"]
+    },
+    {
+        name: "Dhaka Suburbs",
+        price: 80,
+        deliveryTime: "2-3 days",
+        districts: ["Tangail", "Manikganj", "Munshiganj", "Narsingdi"]
+    },
+    {
+        name: "Chittagong City",
+        price: 100,
+        deliveryTime: "2-3 days",
+        districts: ["Chittagong", "Cox's Bazar"]
+    },
+    {
+        name: "Other Divisional Cities",
+        price: 120,
+        deliveryTime: "3-4 days",
+        districts: ["Rajshahi", "Khulna", "Sylhet", "Barisal", "Rangpur", "Mymensingh"]
+    },
+    {
+        name: "District Areas",
+        price: 150,
+        deliveryTime: "4-5 days",
+        districts: ["Comilla", "Noakhali", "Jessore", "Bogra", "Dinajpur"]
+    },
+    {
+        name: "Remote Areas",
+        price: 200,
+        deliveryTime: "5-7 days",
+        districts: ["Bandarban", "Rangamati", "Khagrachari", "Patuakhali", "Bagerhat"]
+    }
+];
+
+// Define proper types for the helper function
+interface MongoObject {
+    _id?: { toString?: () => string; buffer?: unknown };
+    [key: string]: unknown;
+}
+
+// Helper function to convert MongoDB objects to plain objects
+const convertToPlainObject = (obj: unknown): unknown => {
+    if (obj === null || obj === undefined) return obj;
+    if (typeof obj !== 'object') return obj;
+
+    // Handle Date objects
+    if (obj instanceof Date) return obj.toISOString();
+
+    const mongoObj = obj as MongoObject;
+
+    // Handle MongoDB ObjectId - comprehensive check
+    if (mongoObj._id && typeof mongoObj._id === 'object') {
+        // Convert ObjectId to string
+        const convertedObj: Record<string, unknown> = {};
+        for (const key in mongoObj) {
+            if (Object.prototype.hasOwnProperty.call(mongoObj, key) && !key.startsWith('$')) {
+                const value = mongoObj[key];
+                if (key === '_id' && mongoObj._id?.toString) {
+                    convertedObj[key] = mongoObj._id.toString();
+                } else if (typeof value === 'object' && value !== null && 'toString' in value && 'buffer' in value) {
+                    // Handle nested ObjectIds
+                    convertedObj[key] = (value as { toString: () => string }).toString();
+                } else {
+                    convertedObj[key] = convertToPlainObject(value);
+                }
+            }
+        }
+        return convertedObj;
+    }
+
+    // Handle arrays
+    if (Array.isArray(mongoObj)) {
+        return mongoObj.map(item => convertToPlainObject(item));
+    }
+
+    // Handle regular objects
+    const plainObj: Record<string, unknown> = {};
+    for (const key in mongoObj) {
+        if (Object.prototype.hasOwnProperty.call(mongoObj, key) && !key.startsWith('$')) {
+            // Skip Mongoose internal properties
+            if (!['__v', '$__', '$isNew', '$errors', '$locals'].includes(key)) {
+                plainObj[key] = convertToPlainObject(mongoObj[key]);
+            }
+        }
+    }
+
+    return plainObj;
+};
+
 function CartPage() {
     const router = useRouter();
 
@@ -61,6 +165,14 @@ function CartPage() {
 
     const [cartState, setCartState] = useState<CartState>(initialState);
     const [itemQuantities, setItemQuantities] = useState<ItemQuantityState>({});
+    const [isOrderModalOpen, setIsOrderModalOpen] = useState(false);
+    const [selectedDeliveryArea, setSelectedDeliveryArea] = useState<DeliveryArea>(DELIVERY_AREAS[0]);
+    const [selectedDistrict, setSelectedDistrict] = useState<string>("");
+    const [userId, setUserId] = useState("");
+
+    // Get all unique districts from all delivery areas
+    const allDistricts = DELIVERY_AREAS.flatMap(area => area.districts);
+    const uniqueDistricts = [...new Set(allDistricts)].sort();
 
     useEffect(() => {
         if (cartState.items.length > 0) {
@@ -77,12 +189,8 @@ function CartPage() {
         }
     }, [cartState.items]);
 
-    useEffect(() => {
-        calculateSummary();
-    }, [cartState.items, cartState.selectedItems, itemQuantities]);
-
-    // Calculate cart summary
-    const calculateSummary = () => {
+    // Calculate cart summary with dynamic shipping
+    const calculateSummary = useCallback(() => {
         const selectedCartItems = cartState.items.filter(item =>
             cartState.selectedItems.includes(item._id)
         );
@@ -93,7 +201,8 @@ function CartPage() {
             return sum + (price * itemQuantity);
         }, 0);
 
-        const shipping = subtotal > 0 ? 50 : 0;
+        // Free shipping for orders above 2000 BDT, otherwise use selected delivery area price
+        const shipping = subtotal > 2000 ? 0 : selectedDeliveryArea.price;
         const total = subtotal + shipping;
         const selectedCount = selectedCartItems.length;
 
@@ -101,15 +210,46 @@ function CartPage() {
             ...prev,
             summary: { subtotal, shipping, total, selectedCount }
         }));
+    }, [cartState.items, cartState.selectedItems, itemQuantities, selectedDeliveryArea.price]);
+
+    useEffect(() => {
+        calculateSummary();
+    }, [calculateSummary]);
+
+    // Get delivery area based on selected district
+    const getDeliveryAreaForDistrict = (district: string): DeliveryArea => {
+        const area = DELIVERY_AREAS.find(area =>
+            area.districts.includes(district)
+        );
+        return area || DELIVERY_AREAS[0]; // Default to first area if not found
     };
+
+    // Update delivery area when district changes
+    useEffect(() => {
+        if (selectedDistrict) {
+            const area = getDeliveryAreaForDistrict(selectedDistrict);
+            setSelectedDeliveryArea(area);
+        }
+    }, [selectedDistrict]);
+
+    // Get user info on component mount
+    useEffect(() => {
+        const getUserInfo = async () => {
+            const cookie = await getCookie("user");
+            if (cookie) {
+                const userCookie = JSON.parse(cookie);
+                setUserId(userCookie._id);
+            }
+        };
+        getUserInfo();
+    }, []);
 
     // Update specific state properties
     const updateCartState = (updates: Partial<CartState>) => {
         setCartState(prev => ({ ...prev, ...updates }));
     };
 
-    // Fetch cart items
-    const fetchCartItems = async () => {
+    const fetchCartItems = useCallback(async () => {
         try {
             updateCartState({ loading: true });
 
@@ -121,6 +261,8 @@ function CartPage() {
             }
 
             const userCookie = JSON.parse(cookie);
+            setUserId(userCookie._id);
+
             const response = await getCartItems({ userId: userCookie._id });
 
             if (response.isError) {
@@ -129,8 +271,11 @@ function CartPage() {
             }
 
             if (response.data) {
+                // Use JSON methods to ensure plain objects
+                const plainItems = JSON.parse(JSON.stringify(response.data)) as CartItemType[];
+
                 updateCartState({
-                    items: response.data as CartItemType[],
+                    items: plainItems,
                     selectedItems: []
                 });
             }
@@ -140,7 +285,7 @@ function CartPage() {
         } finally {
             updateCartState({ loading: false });
         }
-    };
+    }, [router]);
 
     // Remove item from cart
     const handleRemoveItem = async (itemId: string) => {
@@ -181,7 +326,7 @@ function CartPage() {
         }
     };
 
-    // Update quantity - NEW: Updated to handle state management
+    // Update quantity
     const handleQuantityChange = async (itemId: string, newQuantity: number) => {
         if (newQuantity < 1) return;
 
@@ -232,7 +377,7 @@ function CartPage() {
         }
     };
 
-    // NEW: Update quantity locally (for immediate UI updates)
+    // Update quantity locally (for immediate UI updates)
     const updateQuantityLocal = (itemId: string, newQuantity: number) => {
         const item = cartState.items.find(item => item._id === itemId);
         if (!item) return;
@@ -281,20 +426,22 @@ function CartPage() {
     // Check if an item is being updated
     const isItemUpdating = (id: string) => cartState.updatingItems.includes(id);
 
-    // Get item data with proper typing
+    // Get item data with proper typing and convert to plain objects
     const getItemData = (item: CartItemType) => {
         if (item.product) {
+            const plainProduct = convertToPlainObject(item.product) as IProduct;
             return {
                 type: "product" as const,
-                data: item.product,
-                image: item.product.images?.[0] || imageUrl.packageImage.image1,
-                maxStock: item.product.stock
+                data: plainProduct,
+                image: plainProduct.images?.[0] || imageUrl.packageImage.image1,
+                maxStock: plainProduct.stock
             };
         } else if (item.package) {
+            const plainPackage = convertToPlainObject(item.package) as IPackage;
             return {
                 type: "package" as const,
-                data: item.package,
-                image: item.package.imageUrl?.[0] || imageUrl.packageImage.image1,
+                data: plainPackage,
+                image: plainPackage.imageUrl?.[0] || imageUrl.packageImage.image1,
                 maxStock: Infinity // Packages don't have stock limits
             };
         }
@@ -310,15 +457,52 @@ function CartPage() {
         return itemQuantities[itemId]?.totalPrice || 0;
     };
 
-    // Checkout handler
+    // Get selected items for order modal - ensure plain objects
+    const getSelectedItemsForOrder = () => {
+        return cartState.items
+            .filter(item => cartState.selectedItems.includes(item._id))
+            .map(item => {
+                const itemData = getItemData(item);
+                const quantity = getItemQuantity(item._id);
+
+                if (!itemData) return null;
+
+                // Simple and safe conversion using String()
+                const productId = item.product?._id ? String(item.product._id) : undefined;
+                const packageId = item.package?._id ? String(item.package._id) : undefined;
+
+                return {
+                    product: productId,
+                    package: packageId,
+                    quantity: quantity,
+                    price: itemData.data.price as number,
+                    title: itemData.data.title as string,
+                    image: itemData.image as string,
+                    type: itemData.type
+                };
+            })
+            .filter((item): item is NonNullable<typeof item> => item !== null);
+    };
+
+    // Checkout handler - opens order modal
     const handleCheckout = () => {
         if (cartState.summary.selectedCount === 0) {
             toast.error("Please select items to checkout");
             return;
         }
 
-        toast.success(`Proceeding to checkout with ${cartState.summary.selectedCount} items`);
-        // router.push("/checkout");
+        if (!userId) {
+            toast.error("Please login to proceed with checkout");
+            router.push("/auth/signin");
+            return;
+        }
+
+        if (!selectedDistrict) {
+            toast.error("Please select your district to calculate delivery charge");
+            return;
+        }
+
+        setIsOrderModalOpen(true);
     };
 
     // Continue shopping
@@ -331,10 +515,53 @@ function CartPage() {
         updateCartState({ selectedItems: [] });
     };
 
+    // Handle successful order placement
+    const handleOrderSuccess = async () => {
+        try {
+            // Show loading state
+            updateCartState({ loading: true });
+
+            // Remove ordered items from cart on server
+            const removeResult = await removeCartItemsAfterOrder({
+                userId: userId,
+                itemIds: cartState.selectedItems
+            });
+
+            if (removeResult.success) {
+                // Remove from local state
+                const remainingItems = cartState.items.filter(
+                    item => !cartState.selectedItems.includes(item._id)
+                );
+
+                updateCartState({
+                    items: remainingItems,
+                    selectedItems: [],
+                    loading: false
+                });
+
+                setIsOrderModalOpen(false);
+
+                // Show success message
+                toast.success(`🎉 Order created successfully! ${removeResult.deletedCount} items removed from cart.`);
+
+                // Refresh cart items to get updated data
+                await fetchCartItems();
+            } else {
+                toast.error("Failed to remove items from cart. Please try again.");
+                updateCartState({ loading: false });
+            }
+
+        } catch (error) {
+            console.error("Error in order success handler:", error);
+            toast.error("Something went wrong. Please check your cart.");
+            updateCartState({ loading: false });
+        }
+    };
+
     // Load cart items on component mount
     useEffect(() => {
         fetchCartItems();
-    }, []);
+    }, [fetchCartItems]);
 
     if (cartState.loading) {
         return (
@@ -452,6 +679,56 @@ function CartPage() {
 
                         {cartState.summary.selectedCount > 0 ? (
                             <>
+                                {/* Location Selection */}
+                                <div className="mb-6 space-y-4">
+                                    <div>
+                                        <label className="block text-sm font-medium text-gray-700 mb-2">
+                                            <MapPin className="w-4 h-4 inline mr-1" />
+                                            Select Your District
+                                        </label>
+                                        <select
+                                            value={selectedDistrict}
+                                            onChange={(e) => setSelectedDistrict(e.target.value)}
+                                            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#F27D31] text-sm"
+                                            required
+                                        >
+                                            <option value="">Choose your district</option>
+                                            {uniqueDistricts.map((district) => (
+                                                <option key={district} value={district}>
+                                                    {district}
+                                                </option>
+                                            ))}
+                                        </select>
+                                    </div>
+
+                                    {/* Delivery Information */}
+                                    {selectedDistrict && (
+                                        <div className="bg-blue-50 p-3 rounded-lg border border-blue-200">
+                                            <div className="flex items-center justify-between text-sm">
+                                                <div>
+                                                    <Truck className="w-4 h-4 inline mr-1 text-blue-600" />
+                                                    <span className="font-medium text-blue-800">
+                                                        {selectedDeliveryArea.name}
+                                                    </span>
+                                                </div>
+                                                <div className="text-right">
+                                                    <div className="font-semibold text-blue-800">
+                                                        ৳ {selectedDeliveryArea.price}
+                                                    </div>
+                                                    <div className="text-blue-600 text-xs">
+                                                        {selectedDeliveryArea.deliveryTime}
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            {cartState.summary.subtotal > 2000 && (
+                                                <div className="text-green-600 text-xs mt-1 font-medium">
+                                                    🎉 Free shipping applied! (Order above ৳2,000)
+                                                </div>
+                                            )}
+                                        </div>
+                                    )}
+                                </div>
+
                                 {/* Selected Items List */}
                                 <div className="space-y-3 mb-4 max-h-60 overflow-y-auto">
                                     {cartState.items
@@ -488,7 +765,10 @@ function CartPage() {
                                         <p>৳ {cartState.summary.subtotal.toLocaleString()}</p>
                                     </div>
                                     <div className="flex justify-between">
-                                        <p>Shipping</p>
+                                        <p>
+                                            Shipping
+                                            {selectedDeliveryArea.price === 0 ? ' (Free)' : ` (${selectedDeliveryArea.deliveryTime})`}
+                                        </p>
                                         <p>৳ {cartState.summary.shipping.toLocaleString()}</p>
                                     </div>
                                     <hr className="my-2" />
@@ -501,9 +781,14 @@ function CartPage() {
                                 {/* Checkout Button */}
                                 <button
                                     onClick={handleCheckout}
-                                    className="mt-6 w-full bg-[#F27D31] text-white font-semibold py-3 rounded-full hover:bg-[#e66d1f] transition-all shadow-md"
+                                    disabled={!selectedDistrict}
+                                    className="mt-6 w-full bg-[#F27D31] text-white font-semibold py-3 rounded-full hover:bg-[#e66d1f] transition-all shadow-md disabled:opacity-50 disabled:cursor-not-allowed"
                                 >
-                                    Proceed to Checkout ({cartState.summary.selectedCount} items)
+                                    {!selectedDistrict ? (
+                                        "Select District to Checkout"
+                                    ) : (
+                                        `Proceed to Checkout (${cartState.summary.selectedCount} items)`
+                                    )}
                                 </button>
 
                                 {/* Security Notice */}
@@ -531,6 +816,27 @@ function CartPage() {
                     </div>
                 </div>
             )}
+
+            {/* Order Modal */}
+            <OrderModal
+                isOpen={isOrderModalOpen}
+                onClose={() => setIsOrderModalOpen(false)}
+                onOrderSuccess={handleOrderSuccess}
+                items={getSelectedItemsForOrder()}
+                userId={userId}
+                shippingInfo={{
+                    provider: "Redx",
+                    area: selectedDeliveryArea.name,
+                    district: selectedDistrict,
+                    cost: cartState.summary.shipping,
+                    deliveryTime: selectedDeliveryArea.deliveryTime
+                }}
+                orderSummary={{
+                    subtotal: cartState.summary.subtotal,
+                    shipping: cartState.summary.shipping,
+                    total: cartState.summary.total
+                }}
+            />
         </section>
     );
 }

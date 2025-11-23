@@ -4,6 +4,7 @@ import React, { useEffect, useState } from "react";
 import { motion } from "framer-motion";
 import {getAllTrainingProgramsServerSide} from "@/server/functions/training.fun";
 import {getAllVideosServerSide} from "@/server/functions/video.fun";
+import {useRouter} from "next/navigation";
 
 interface TrainingProgram {
     _id: string;
@@ -34,6 +35,7 @@ function PersonalTrainingPage() {
     const [featuredVideos, setFeaturedVideos] = useState<Video[]>([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
+    const router = useRouter();
 
     useEffect(() => {
         loadData();
@@ -80,6 +82,10 @@ function PersonalTrainingPage() {
             currency: 'USD',
         }).format(price);
     };
+
+    const contactHandaler = () => {
+        router.push("/contact");
+    }
 
     if (loading) {
         return (
@@ -206,8 +212,8 @@ function PersonalTrainingPage() {
                                                 <span className="text-gray-300">{program.duration}</span>
                                             </div>
                                         </div>
-                                        <button className="bg-[#F27D31] text-white font-semibold py-2 px-4 text-sm rounded-full hover:bg-[#e36e20] transition cursor-pointer whitespace-nowrap ml-4">
-                                            Buy Package
+                                        <button onClick={ () => contactHandaler()} className="bg-[#F27D31] text-white font-semibold py-2 px-4 text-sm rounded-full hover:bg-[#e36e20] transition cursor-pointer whitespace-nowrap ml-4">
+                                            Contact Us
                                         </button>
                                     </div>
                                 </div>
