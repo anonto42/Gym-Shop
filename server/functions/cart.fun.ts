@@ -66,20 +66,17 @@ export async function countCurrentCartLength({userId}: {userId: unknown}) {
     }
 }
 
-export async function getCartItems({ userId }: { userId: unknown }) {
+export async function getCartItems({ userId }: { userId: string }) {
     try {
         await connectToDB();
 
-        const cartItems = await CartModel.find({
-            userId: userId,
-            isRemoved: false
-        })
-            .populate("product")
-            .populate("package")
-            .sort({ createdAt: -1 })
-            .lean()
+        const cartItems = await CartModel.find({ userId })
+            .populate('product')
+            .populate('package')
+            .lean() // Convert to plain JavaScript objects
             .exec();
 
+        // Convert all ObjectIds to strings
         const serializedItems = JSON.parse(JSON.stringify(cartItems));
 
         return {
@@ -88,57 +85,30 @@ export async function getCartItems({ userId }: { userId: unknown }) {
             message: "Cart items fetched successfully",
             data: serializedItems
         };
-
     } catch (error) {
-        return handleServerError(error);
-    }
-}
-
-// Remove item from cart
-export async function removeFromCart({ cartId }: { cartId: unknown }) {
-    try {
-        await connectToDB();
-
-        const removedCart = await CartModel.findByIdAndUpdate(
-            cartId,
-            {
-                isActive: false,
-                isRemoved: true
-            },
-            { new: true }
-        ).exec();
-
-        if (!removedCart) {
-            return {
-                isError: true,
-                status: 404,
-                message: "Cart item not found",
-                data: null
-            };
-        }
-
+        console.error("Error fetching cart items:", error);
         return {
-            isError: false,
-            status: 200,
-            message: "Item removed from cart successfully",
-            data: removedCart
+            isError: true,
+            status: 500,
+            message: "Failed to fetch cart items",
+            data: null
         };
-
-    } catch (error) {
-        return handleServerError(error);
     }
 }
 
-// Update cart quantity
-export async function updateCartQuantity({ cartId, quantity }: { cartId: unknown, quantity: number }) {
+export async function updateCartQuantity({ cartId, quantity }: { cartId: string; quantity: number }) {
     try {
         await connectToDB();
 
         const updatedCart = await CartModel.findByIdAndUpdate(
             cartId,
-            { quantity: quantity },
+            { quantity },
             { new: true }
-        ).exec();
+        )
+            .populate('product')
+            .populate('package')
+            .lean() // Convert to plain object
+            .exec();
 
         if (!updatedCart) {
             return {
@@ -155,12 +125,48 @@ export async function updateCartQuantity({ cartId, quantity }: { cartId: unknown
             message: "Quantity updated successfully",
             data: updatedCart
         };
-
     } catch (error) {
-        return handleServerError(error);
+        console.error("Error updating cart quantity:", error);
+        return {
+            isError: true,
+            status: 500,
+            message: "Failed to update quantity",
+            data: null
+        };
     }
 }
 
+export async function removeFromCart({ cartId }: { cartId: string }) {
+    try {
+        await connectToDB();
+
+        const deletedCart = await CartModel.findByIdAndDelete(cartId).lean().exec();
+
+        if (!deletedCart) {
+            return {
+                isError: true,
+                status: 404,
+                message: "Cart item not found",
+                data: null
+            };
+        }
+
+        return {
+            isError: false,
+            status: 200,
+            message: "Item removed from cart",
+            data: deletedCart
+        };
+    } catch (error) {
+        console.error("Error removing from cart:", error);
+        return {
+            isError: true,
+            status: 500,
+            message: "Failed to remove item",
+            data: null
+        };
+    }
+}
 // Clear entire cart
 export async function clearCart({ userId }: { userId: unknown }) {
     try {
