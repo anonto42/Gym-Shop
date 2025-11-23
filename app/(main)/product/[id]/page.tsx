@@ -4,7 +4,7 @@ import ProductCart from "@/components/card/ProductCart";
 import imageUrl from "@/const/imageUrl";
 import { Minus, Plus } from "lucide-react";
 import Image from "next/image";
-import React, { useEffect, useState } from "react";
+import React, {useEffect, useLayoutEffect, useState} from "react";
 import { FaStar, FaStarHalfAlt, FaRegStar } from "react-icons/fa";
 import { getAProductsServerSide, getRelatedProductsServerSide } from "@/server/functions/product.fun";
 import { useParams, useRouter } from "next/navigation";
@@ -12,8 +12,10 @@ import Loader from "@/components/loader/Loader";
 import { IProduct } from "@/server/models/product/product.interface";
 import {toast} from "sonner";
 import {addToCart} from "@/server/functions/cart.fun";
-import {getCookie} from "@/server/helper/jwt.helper";
+import {getCookie, setCookie} from "@/server/helper/jwt.helper";
+import OrderModal from "@/components/modal/OrderModal";
 import {IUser} from "@/server/models/user/user.interfce";
+import {isAuthenticatedAndGetUser} from "@/server/functions/auth.fun";
 
 function ProductViewPage() {
     const [productData, setProductData] = useState<IProduct | null>(null);
@@ -22,6 +24,26 @@ function ProductViewPage() {
     const [selectedImageIndex, setSelectedImageIndex] = useState(0);
     const [quantity, setQuantity] = useState(1);
     const [isClient, setIsClient] = useState(false);
+    const [isOrderModalOpen, setIsOrderModalOpen] = useState(false);
+    const [user, setUser] = useState<IUser | null>(null);
+
+    useLayoutEffect(() => {
+        ;( async ()=> {
+            const cookie = await getCookie("user");
+            if (typeof cookie == 'string' ) return setUser( JSON.parse(cookie) );
+            else {
+                const res = await isAuthenticatedAndGetUser();
+                if ( typeof res != "string" && res.isError == true) {
+                    setUser(null)
+                    return;
+                } else if ( typeof res == "string" ) {
+                    await setCookie({name:"user", value: res });
+                    setUser(JSON.parse(res));
+                    return;
+                }
+            }
+        })()
+    },[]);
 
     const { id } = useParams();
     const router = useRouter();
@@ -149,7 +171,12 @@ function ProductViewPage() {
         router.push("/cart")
     };
 
-    const directBuy = ( ) => {}
+    const directBuy = () => {
+        if(!user){
+            return toast.warning("Please login to buy a product");
+        }
+        setIsOrderModalOpen(true);
+    }
 
     if (loading) {
         return <Loader />;
@@ -171,7 +198,6 @@ function ProductViewPage() {
         );
     }
 
-    // Only render the main content when we're on the client side and have data
     if (!isClient || !productData) {
         return <Loader />;
     }
@@ -405,6 +431,19 @@ function ProductViewPage() {
                     </div>
                 </section>
             )}
+
+            {/* Order Modal */}
+            <OrderModal
+                isOpen={isOrderModalOpen}
+                onClose={() => setIsOrderModalOpen(false)}
+                item={{
+                    ...productData,
+                    type: "product",
+                    images: productData.images
+                }}
+                quantity={quantity}
+                userId={ user?._id ?? "" }
+            />
         </div>
     );
 }

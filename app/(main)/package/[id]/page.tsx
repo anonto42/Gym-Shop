@@ -4,15 +4,18 @@ import ProductCart from "@/components/card/ProductCart";
 import imageUrl from "@/const/imageUrl";
 import { Minus, Plus } from "lucide-react";
 import Image from "next/image";
-import React, { useEffect, useState } from "react";
+import React, {useEffect, useLayoutEffect, useState} from "react";
 import { FaStar, FaStarHalfAlt, FaRegStar, FaCheck } from "react-icons/fa";
 import { useParams, useRouter } from "next/navigation";
 import Loader from "@/components/loader/Loader";
 import { toast } from "sonner";
 import { addToCart } from "@/server/functions/cart.fun";
-import { getCookie } from "@/server/helper/jwt.helper";
+import {getCookie, setCookie} from "@/server/helper/jwt.helper";
 import { IPackage } from "@/server/models/package/package.interface";
 import { getAPackageServerSide, getRelatedPackagesServerSide } from "@/server/functions/package.fun";
+import OrderModal from "@/components/modal/OrderModal";
+import {IUser} from "@/server/models/user/user.interfce";
+import {isAuthenticatedAndGetUser} from "@/server/functions/auth.fun";
 
 function PackageViewPage() {
     const [packageData, setPackageData] = useState<IPackage | null>(null);
@@ -21,6 +24,26 @@ function PackageViewPage() {
     const [selectedImageIndex, setSelectedImageIndex] = useState(0);
     const [quantity, setQuantity] = useState(1);
     const [isClient, setIsClient] = useState(false);
+    const [isOrderModalOpen, setIsOrderModalOpen] = useState(false);
+    const [user, setUser] = useState<IUser | null>(null);
+
+    useLayoutEffect(() => {
+        ;( async ()=> {
+            const cookie = await getCookie("user");
+            if (typeof cookie == 'string' ) return setUser( JSON.parse(cookie) );
+            else {
+                const res = await isAuthenticatedAndGetUser();
+                if ( typeof res != "string" && res.isError == true) {
+                    setUser(null)
+                    return;
+                } else if ( typeof res == "string" ) {
+                    await setCookie({name:"user", value: res });
+                    setUser(JSON.parse(res));
+                    return;
+                }
+            }
+        })()
+    },[]);
 
     const { id } = useParams();
     const router = useRouter();
@@ -140,8 +163,10 @@ function PackageViewPage() {
     };
 
     const directBuy = () => {
-        // Implement direct buy logic here
-        toast.info("Direct buy feature coming soon!");
+        if (!user){
+            return toast.warning("Please login to buy a product");
+        }
+        setIsOrderModalOpen(true);
     }
 
     if (loading) {
@@ -341,6 +366,18 @@ function PackageViewPage() {
                             >
                                 Buy Now
                             </button>
+
+                            <OrderModal
+                                isOpen={isOrderModalOpen}
+                                onClose={() => setIsOrderModalOpen(false)}
+                                item={{
+                                    ...packageData,
+                                    type: "package",
+                                    imageUrl: packageData.imageUrl
+                                }}
+                                quantity={quantity}
+                                userId={user?._id ?? ""}
+                            />
                         </div>
                     </div>
                 </div>
