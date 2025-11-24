@@ -3,12 +3,12 @@ import { Document, Model, Types } from "mongoose";
 export interface IOrderItem {
     product?: Types.ObjectId;
     package?: Types.ObjectId;
-    trainingProgram?: Types.ObjectId;
+    // Remove trainingProgram
     quantity: number;
     price: number;
     title: string;
     image: string;
-    type: "product" | "package" | "trainingProgram";
+    type: "product" | "package"; // Remove "trainingProgram"
 }
 
 export interface IShippingAddress {
@@ -19,15 +19,8 @@ export interface IShippingAddress {
     city: string;
     postalCode?: string;
     country: string;
+    district: string;
 }
-
-export type OrderStatus =
-    | "pending"
-    | "confirmed"
-    | "processing"
-    | "shipped"
-    | "delivered"
-    | "cancelled";
 
 export interface IOrder extends Document {
     orderNumber: string;
@@ -38,19 +31,14 @@ export interface IOrder extends Document {
     shippingFee: number;
     tax: number;
     total: number;
-    status: OrderStatus;
+    status: "pending" | "confirmed" | "processing" | "shipped" | "delivered" | "cancelled";
     paymentStatus: "pending" | "paid" | "failed" | "refunded";
     paymentMethod: "card" | "cashOnDelivery" | "bankTransfer";
     notes?: string;
-    estimatedDelivery?: Date;
-    deliveredAt?: Date;
-    cancelledAt?: Date;
     createdAt: Date;
     updatedAt: Date;
 }
 
 export interface IOrderModel extends Model<IOrder> {
     generateOrderNumber(): Promise<string>;
-    findByUser(userId: string): Promise<IOrder[]>;
-    findByStatus(status: OrderStatus): Promise<IOrder[]>;
 }

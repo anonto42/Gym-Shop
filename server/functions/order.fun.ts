@@ -1,9 +1,14 @@
 "use server";
 
+import "@/server/models/product/product.model";
+import "@/server/models/package/package.model";
+import "@/server/models/user/user.model";
 import { revalidatePath } from "next/cache";
 import connectToDB from "@/server/db";
 import {OrderModel} from "@/server/models/order/order.model";
 import {CartModel} from "@/server/models/cart/cart.model";
+import {IPackage} from "@/server/models/package/package.interface";
+import {IProduct} from "@/server/models/product/product.interface";
 
 interface CreateOrderData {
     userId: string;
@@ -28,46 +33,30 @@ export async function createOrder(orderData: CreateOrderData) {
     try {
         await connectToDB();
 
-        const subtotal = orderData.items.reduce((sum, item) => sum + (item.price * item.quantity), 0);
-        const shippingFee = subtotal > 2000 ? 0 : (orderData.shippingAddress.district === "Dhaka" ? 60 : 120);
-        const tax = subtotal * 0.05;
-        const total = subtotal + shippingFee + tax;
+        // Make sure items don't have trainingProgram if you're not using it
+        const items = orderData.items.map((item: any) => ({
+            product: item.product || undefined,
+            package: item.package || undefined,
+            quantity: item.quantity,
+            price: item.price,
+            title: item.title,
+            image: item.image,
+            type: item.type
+        }));
 
-        // Generate order number first
-        const orderNumber = await OrderModel.generateOrderNumber();
-
-        const order = new OrderModel({
-            orderNumber,
-            user: orderData.userId, // Use 'user' field instead of 'userId'
-            items: orderData.items,
-            shippingAddress: orderData.shippingAddress,
-            subtotal,
-            shippingFee,
-            tax,
-            total,
-            paymentMethod: orderData.paymentMethod,
-            status: "pending",
-            paymentStatus: orderData.paymentMethod === "cashOnDelivery" ? "pending" : "pending",
-            notes: orderData.notes
+        const order = await OrderModel.create({
+            ...orderData,
+            items,
+            subtotal: orderData.items.reduce((sum: number, item: any) => sum + (item.price * item.quantity), 0),
+            tax: orderData.items.reduce((sum: number, item: any) => sum + (item.price * item.quantity), 0) * 0.05,
+            total: orderData.items.reduce((sum: number, item: any) => sum + (item.price * item.quantity), 0) * 1.05 // subtotal + 5% tax
         });
 
-        await order.save();
-
-        console.log("✅ Order created successfully:", order.orderNumber);
-
-        revalidatePath("/admin/orders");
-        return {
-            success: true,
-            order: JSON.parse(JSON.stringify(order)),
-            message: "Order created successfully"
-        };
+        revalidatePath("/orders");
+        return { success: true, order: JSON.parse(JSON.stringify(order)) };
     } catch (error) {
-        console.error("❌ Error creating order:", error);
-        return {
-            success: false,
-            error: "Failed to create order",
-            message: "Please try again"
-        };
+        console.error("Error creating order:", error);
+        return { success: false, error: "Failed to create order" };
     }
 }
 
@@ -160,11 +149,11 @@ export async function getOrderById(orderId: string) {
     try {
         await connectToDB();
 
-        const order = await OrderModel.findById(orderId)
+        const order = await OrderModel.findOne({ orderNumber: orderId })
             .populate("user", "name email phone")
             .populate("items.product")
             .populate("items.package")
-            .populate("items.trainingProgram")
+            // Remove trainingProgram population
             .exec();
 
         if (!order) {

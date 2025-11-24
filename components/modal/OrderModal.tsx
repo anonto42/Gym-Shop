@@ -82,6 +82,42 @@ export default function OrderModal({
         }));
     };
 
+    const initiateSSLCommerzPayment = async (orderId: string, amount: number) => {
+        try {
+            const response = await fetch('/api/payment/sslcommerz/initiate', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    orderId,
+                    amount,
+                    customerInfo: {
+                        name: formData.fullName,
+                        email: formData.email,
+                        phone: formData.phone,
+                        address: formData.address,
+                        city: formData.city,
+                        postalCode: formData.postalCode || '1200', // Make sure this is included
+                    }
+                }),
+            });
+
+            const result = await response.json();
+            console.log('Payment initiation result:', result);
+
+            if (result.success && result.paymentUrl) {
+                // Redirect to SSL Commerz payment page
+                window.location.href = result.paymentUrl;
+            } else {
+                toast.error(result.error || 'Payment initiation failed');
+            }
+        } catch (error) {
+            console.error('Payment error:', error);
+            toast.error('Failed to connect to payment gateway');
+        }
+    };
+
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
         setLoading(true);
@@ -95,19 +131,24 @@ export default function OrderModal({
                     district: shippingInfo?.district || formData.city
                 },
                 paymentMethod,
+                paymentStatus: paymentMethod === "card" ? "pending" : "pending", // Set initial status
                 notes: `Order from cart with ${items.length} items - ${shippingInfo?.provider || 'Standard'} Delivery`
             };
-
-            console.log("Creating order with data:", orderData);
 
             // Call your server action to create order
             const result = await createOrder(orderData);
 
-            if (result.success) {
+            if (result.success && result.order) {
+                // If card payment, initiate SSL Commerz
+                if (paymentMethod === "card") {
+                    await initiateSSLCommerzPayment(result.order._id, total);
+                    return; // Stop here as we're redirecting to payment page
+                }
+
+                // For cash on delivery, show success
                 toast.success("Order created successfully! 🎉");
                 setStep("confirmation");
 
-                // Call success callback to remove items from cart
                 if (onOrderSuccess) {
                     onOrderSuccess();
                 }
@@ -131,9 +172,10 @@ export default function OrderModal({
             toast.info("💰 Cash on Delivery selected. You'll pay when you receive your order.");
         } else if (method === "card") {
             toast.info("💳 Online payment selected. You'll be redirected to payment gateway.");
-        } else if (method === "bankTransfer") {
-            toast.info("🏦 Bank transfer selected. Please complete the transfer within 24 hours.");
         }
+        // else if (method === "bankTransfer") {
+        //     toast.info("🏦 Bank transfer selected. Please complete the transfer within 24 hours.");
+        // }
     };
 
     const handleClose = () => {
@@ -148,12 +190,6 @@ export default function OrderModal({
             country: "Bangladesh"
         });
         onClose();
-    };
-
-    const handleOnlinePayment = () => {
-        toast.info("🔄 Online payment system is starting... This feature will be implemented soon!");
-        // Here you would integrate with your payment gateway
-        // For now, we'll just show a toast
     };
 
     return (
@@ -382,43 +418,43 @@ export default function OrderModal({
                                             />
                                             <CreditCard className="w-5 h-5" />
                                             <div className="flex-1">
-                                                <span className="font-medium">Credit/Debit Card</span>
+                                                <span className="font-medium">Online Payment</span>
                                                 <p className="text-sm text-gray-600">Pay securely online</p>
                                             </div>
                                         </label>
 
-                                        <label className={`flex items-center gap-3 p-3 border rounded-lg cursor-pointer transition-all ${
-                                            paymentMethod === "bankTransfer" ? "border-[#F27D31] bg-orange-50" : "border-gray-300 hover:bg-gray-50"
-                                        }`}>
-                                            <input
-                                                type="radio"
-                                                name="paymentMethod"
-                                                value="bankTransfer"
-                                                checked={paymentMethod === "bankTransfer"}
-                                                onChange={() => handlePaymentSelection("bankTransfer")}
-                                                className="text-[#F27D31] focus:ring-[#F27D31]"
-                                                disabled={loading}
-                                            />
-                                            <CreditCard className="w-5 h-5" />
-                                            <div className="flex-1">
-                                                <span className="font-medium">Bank Transfer</span>
-                                                <p className="text-sm text-gray-600">Transfer to our bank account</p>
-                                            </div>
-                                        </label>
+                                        {/*<label className={`flex items-center gap-3 p-3 border rounded-lg cursor-pointer transition-all ${*/}
+                                        {/*    paymentMethod === "bankTransfer" ? "border-[#F27D31] bg-orange-50" : "border-gray-300 hover:bg-gray-50"*/}
+                                        {/*}`}>*/}
+                                        {/*    <input*/}
+                                        {/*        type="radio"*/}
+                                        {/*        name="paymentMethod"*/}
+                                        {/*        value="bankTransfer"*/}
+                                        {/*        checked={paymentMethod === "bankTransfer"}*/}
+                                        {/*        onChange={() => handlePaymentSelection("bankTransfer")}*/}
+                                        {/*        className="text-[#F27D31] focus:ring-[#F27D31]"*/}
+                                        {/*        disabled={loading}*/}
+                                        {/*    />*/}
+                                        {/*    <CreditCard className="w-5 h-5" />*/}
+                                        {/*    <div className="flex-1">*/}
+                                        {/*        <span className="font-medium">Bank Transfer</span>*/}
+                                        {/*        <p className="text-sm text-gray-600">Transfer to our bank account</p>*/}
+                                        {/*    </div>*/}
+                                        {/*</label>*/}
                                     </div>
 
                                     {/* Online Payment Button (for card payments) */}
-                                    {paymentMethod === "card" && (
-                                        <div className="mt-4">
-                                            <button
-                                                type="button"
-                                                onClick={handleOnlinePayment}
-                                                className="w-full bg-green-600 text-white font-semibold py-3 rounded-lg hover:bg-green-700 transition-all"
-                                            >
-                                                💳 Proceed to Online Payment
-                                            </button>
-                                        </div>
-                                    )}
+                                    {/*{paymentsentMethod === "card" && (*/}
+                                    {/*    <div className="mt-4">*/}
+                                    {/*        <button*/}
+                                    {/*            type="button"*/}
+                                    {/*            onClick={handleOnlinePayment}*/}
+                                    {/*            className="w-full bg-green-600 text-white font-semibold py-3 rounded-lg hover:bg-green-700 transition-all"*/}
+                                    {/*        >*/}
+                                    {/*            💳 Proceed to Online Payment*/}
+                                    {/*        </button>*/}
+                                    {/*    </div>*/}
+                                    {/*)}*/}
                                 </div>
                             </div>
                         </div>

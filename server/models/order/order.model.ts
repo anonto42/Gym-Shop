@@ -1,11 +1,10 @@
-// server/models/order/order.model.ts
 import { model, models, Schema } from "mongoose";
 import { IOrder, IOrderModel } from "./order.interface";
 
 const orderItemSchema = new Schema({
     product: { type: Schema.Types.ObjectId, ref: "Product" },
     package: { type: Schema.Types.ObjectId, ref: "Package" },
-    trainingProgram: { type: Schema.Types.ObjectId, ref: "TrainingProgram" },
+    // Remove trainingProgram reference since you don't have this model
     quantity: { type: Number, required: true, min: 1 },
     price: { type: Number, required: true, min: 0 },
     title: { type: String, required: true },
@@ -13,7 +12,7 @@ const orderItemSchema = new Schema({
     type: {
         type: String,
         required: true,
-        enum: ["product", "package", "trainingProgram"]
+        enum: ["product", "package"] // Remove "trainingProgram" from enum
     }
 });
 
