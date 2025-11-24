@@ -1,3 +1,4 @@
+"use client"
 import {Line} from "react-chartjs-2";
 import {
     Chart as ChartJS,
@@ -9,6 +10,7 @@ import {
     Tooltip,
     Legend,
     Filler,
+    TooltipItem,
 } from 'chart.js';
 
 ChartJS.register(
@@ -24,33 +26,38 @@ ChartJS.register(
 
 interface RevenueChartProps {
     data?: {
-        labels: string[];
-        revenue: number[];
-        profit: number[];
+        [key: string]: number;
+    };
+    title?: string;
+    showStats?: boolean;
+}
+
+// Define proper types for Chart.js callbacks
+interface TooltipContext {
+    parsed: {
+        y: number;
+    };
+    dataset: {
+        label?: string;
     };
 }
 
-export default function RevenueChart({ data }: RevenueChartProps) {
-    // Generate realistic data if not provided
-    const chartData = data || generateRevenueData();
+export default function RevenueChart({
+                                         data,
+                                         title = "Revenue Analytics",
+                                         showStats = true
+                                     }: RevenueChartProps) {
+    // Convert simple object to chart data
+    const chartData = formatChartData(data);
 
     const revenueData = {
         labels: chartData.labels,
         datasets: [
             {
                 label: "Revenue",
-                data: chartData.revenue,
+                data: chartData.values,
                 borderColor: "rgba(34, 197, 94, 1)",
                 backgroundColor: "rgba(34, 197, 94, 0.1)",
-                fill: true,
-                tension: 0.4,
-                borderWidth: 3,
-            },
-            {
-                label: "Profit",
-                data: chartData.profit,
-                borderColor: "rgba(168, 85, 247, 1)",
-                backgroundColor: "rgba(168, 85, 247, 0.1)",
                 fill: true,
                 tension: 0.4,
                 borderWidth: 3,
@@ -58,9 +65,8 @@ export default function RevenueChart({ data }: RevenueChartProps) {
         ]
     };
 
-    const totalRevenue = chartData.revenue.reduce((a, b) => a + b, 0);
-    const totalProfit = chartData.profit.reduce((a, b) => a + b, 0);
-    const profitMargin = ((totalProfit / totalRevenue) * 100);
+    const totalRevenue = chartData.values.reduce((a, b) => a + b, 0);
+    const averageRevenue = totalRevenue / chartData.values.length;
 
     const chartOptions = {
         responsive: true,
@@ -78,16 +84,10 @@ export default function RevenueChart({ data }: RevenueChartProps) {
                 mode: "index" as const,
                 intersect: false,
                 callbacks: {
-                    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                    label: function(context: any) {
-                        let label = context.dataset.label || '';
-                        if (label) {
-                            label += ': ';
-                        }
-                        if (context.parsed.y !== null) {
-                            label += `৳${context.parsed.y.toLocaleString()}`;
-                        }
-                        return label;
+                    label: function(context: TooltipItem<'line'>) {
+                        // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+// @ts-ignore
+                        return `৳${context.parsed.y.toLocaleString()}`;
                     }
                 }
             },
@@ -95,20 +95,21 @@ export default function RevenueChart({ data }: RevenueChartProps) {
         scales: {
             x: {
                 grid: { display: false },
-                ticks: { maxTicksLimit: 8 }
             },
             y: {
                 grid: { color: '#f3f4f6' },
                 ticks: {
-                    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                    callback: function(value: any) {
-                        return `৳${(value / 1000).toFixed(0)}k`;
+                    callback: function(value: string | number) {
+                        if (typeof value === 'number') {
+                            return `৳${(value / 1000).toFixed(0)}k`;
+                        }
+                        return value;
                     }
                 }
             }
         },
         elements: {
-            point: { radius: 0, hoverRadius: 6 }
+            point: { radius: 3, hoverRadius: 6 }
         },
     };
 
@@ -116,64 +117,47 @@ export default function RevenueChart({ data }: RevenueChartProps) {
         <div className="bg-white p-6 rounded-xl shadow-lg border border-gray-100">
             <div className="flex justify-between items-center mb-6">
                 <div>
-                    <h3 className="text-xl font-bold text-gray-800">Revenue & Profit Analytics</h3>
-                    <p className="text-gray-500 text-sm">Last 30 Days Performance</p>
+                    <h3 className="text-xl font-bold text-gray-800">{title}</h3>
+                    <p className="text-gray-500 text-sm">Monthly Performance</p>
                 </div>
-                <span className="px-3 py-1 bg-green-100 text-green-800 rounded-full text-sm font-medium">
-                    +{profitMargin.toFixed(1)}% Margin
-                </span>
             </div>
+
             <div className="h-80">
                 <Line data={revenueData} options={chartOptions} />
             </div>
-            <div className="mt-4 grid grid-cols-3 gap-4">
-                <div>
-                    <p className="text-gray-600 text-sm">Total Revenue</p>
-                    <p className="text-lg font-bold text-green-600">
-                        ৳{(totalRevenue / 1000).toFixed(1)}k
-                    </p>
+
+            {showStats && (
+                <div className="mt-4 grid grid-cols-2 gap-4">
+                    <div>
+                        <p className="text-gray-600 text-sm">Total Revenue</p>
+                        <p className="text-lg font-bold text-green-600">
+                            ৳{(totalRevenue / 1000).toFixed(1)}k
+                        </p>
+                    </div>
+                    <div>
+                        <p className="text-gray-600 text-sm">Average Monthly</p>
+                        <p className="text-lg font-semibold text-gray-800">
+                            ৳{(averageRevenue / 1000).toFixed(1)}k
+                        </p>
+                    </div>
                 </div>
-                <div>
-                    <p className="text-gray-600 text-sm">Total Profit</p>
-                    <p className="text-lg font-bold text-purple-600">
-                        ৳{(totalProfit / 1000).toFixed(1)}k
-                    </p>
-                </div>
-                <div>
-                    <p className="text-gray-600 text-sm">Profit Margin</p>
-                    <p className="text-lg font-semibold text-gray-800">
-                        {profitMargin.toFixed(1)}%
-                    </p>
-                </div>
-            </div>
+            )}
         </div>
     );
 }
 
-// Helper function to generate realistic revenue data
-function generateRevenueData() {
-    const labels = Array.from({ length: 30 }, (_, i) => {
-        const date = new Date();
-        date.setDate(date.getDate() - 29 + i);
-        return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
-    });
-
-    let revenue = 5000;
-    let profit = 2000;
-    const revenueData = [];
-    const profitData = [];
-
-    for (let i = 0; i < 30; i++) {
-        // Add some randomness but maintain trend
-        revenue += Math.random() * 1000 - 200;
-        profit += Math.random() * 500 - 100;
-
-        // Ensure profit is always less than revenue
-        profit = Math.min(profit, revenue * 0.6);
-
-        revenueData.push(Math.max(1000, revenue));
-        profitData.push(Math.max(500, profit));
+// Helper function to format simple object into chart data
+function formatChartData(data?: { [key: string]: number }) {
+    if (!data) {
+        // Generate sample data if none provided
+        const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+        const values = months.map(() => Math.floor(Math.random() * 5000) + 1000);
+        return { labels: months, values };
     }
 
-    return { labels, revenue: revenueData, profit: profitData };
+    // Convert object to sorted arrays
+    const labels = Object.keys(data);
+    const values = Object.values(data);
+
+    return { labels, values };
 }
