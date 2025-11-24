@@ -78,6 +78,7 @@ export default function RevenueChart({ data }: RevenueChartProps) {
                 mode: "index" as const,
                 intersect: false,
                 callbacks: {
+                    // eslint-disable-next-line @typescript-eslint/no-explicit-any
                     label: function(context: any) {
                         let label = context.dataset.label || '';
                         if (label) {
@@ -99,6 +100,7 @@ export default function RevenueChart({ data }: RevenueChartProps) {
             y: {
                 grid: { color: '#f3f4f6' },
                 ticks: {
+                    // eslint-disable-next-line @typescript-eslint/no-explicit-any
                     callback: function(value: any) {
                         return `৳${(value / 1000).toFixed(0)}k`;
                     }
