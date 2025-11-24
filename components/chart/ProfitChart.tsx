@@ -1,5 +1,4 @@
 import {Line} from "react-chartjs-2";
-import type { Tick } from 'chart.js';
 import {
     Chart as ChartJS,
     CategoryScale,
@@ -23,9 +22,44 @@ ChartJS.register(
     Filler
 );
 
-export default function ProfitChart(){
+interface ProfitChartProps {
+    data?: {
+        labels: string[];
+        orders: number[];
+        users: number[];
+    };
+}
 
-    const labels = Array.from({ length: 30 }, (_, i) => `Dec ${i + 1}`);
+export default function ProfitChart({ data }: ProfitChartProps) {
+    const chartData = data || generateGrowthData();
+
+    const growthData = {
+        labels: chartData.labels,
+        datasets: [
+            {
+                label: "Daily Orders",
+                data: chartData.orders,
+                borderColor: "rgba(59, 130, 246, 1)",
+                backgroundColor: "rgba(59, 130, 246, 0.1)",
+                fill: true,
+                tension: 0.4,
+                borderWidth: 3,
+            },
+            {
+                label: "New Users",
+                data: chartData.users,
+                borderColor: "rgba(245, 158, 11, 1)",
+                backgroundColor: "rgba(245, 158, 11, 0.1)",
+                fill: true,
+                tension: 0.4,
+                borderWidth: 3,
+            }
+        ]
+    };
+
+    const totalOrders = chartData.orders.reduce((a, b) => a + b, 0);
+    const totalUsers = chartData.users.reduce((a, b) => a + b, 0);
+    const avgOrdersPerUser = totalUsers > 0 ? (totalOrders / totalUsers).toFixed(1) : "0";
 
     const chartOptions = {
         responsive: true,
@@ -34,138 +68,86 @@ export default function ProfitChart(){
             legend: {
                 display: true,
                 position: 'top' as const,
-                labels: {
-                    usePointStyle: true,
-                    padding: 15,
-                }
             },
             tooltip: {
                 mode: "index" as const,
                 intersect: false,
-                backgroundColor: 'rgba(255, 255, 255, 0.95)',
-                titleColor: '#1f2937',
-                bodyColor: '#1f2937',
-                borderColor: '#e5e7eb',
-                borderWidth: 1,
-                padding: 12,
-                boxPadding: 6,
             },
-        },
-        interaction: {
-            mode: 'nearest' as const,
-            axis: 'x' as const,
-            intersect: false
         },
         scales: {
             x: {
-                grid: {
-                    display: false,
-                    drawBorder: false,
-                },
-                ticks: {
-                    maxTicksLimit: 8,
-                    color: '#6b7280',
-                }
+                grid: { display: false },
+                ticks: { maxTicksLimit: 8 }
             },
             y: {
-                grid: {
-                    color: '#f3f4f6',
-                    drawBorder: false,
-                },
-                ticks: {
-                    color: '#6b7280',
-                    callback: (value: number | string | Tick) => {
-                        const num = typeof value === 'number' ? value : Number(value);
-                        return `$${(num / 1000).toFixed(0)}k`;
-                    }
-                }
+                grid: { color: '#f3f4f6' },
+                beginAtZero: true
             }
         },
         elements: {
-            point: {
-                radius: 0,
-                hoverRadius: 6,
-                hoverBorderWidth: 2,
-            },
-            line: {
-                tension: 0.4,
-                borderWidth: 3,
-            }
+            point: { radius: 0, hoverRadius: 6 }
         },
-    }
-    const profitData = {
-        labels,
-        datasets: [
-            {
-                label: "Profit",
-                data: labels.map(() => Math.floor(Math.random() * 80000) + 10000),
-                borderColor: "rgba(168, 85, 247, 1)",
-                backgroundColor: "rgba(168, 85, 247, 0.1)",
-                fill: true,
-                pointBackgroundColor: "rgba(168, 85, 247, 1)",
-                pointBorderColor: "#ffffff",
-                pointHoverBackgroundColor: "#ffffff",
-                pointHoverBorderColor: "rgba(168, 85, 247, 1)",
-            }
-        ]
-    }
-    const revenueData = {
-        labels,
-        datasets: [
-            {
-                label: "Revenue",
-                data: labels.map(() => Math.floor(Math.random() * 35000) + 5000),
-                borderColor: "rgba(34, 197, 94, 1)",
-                backgroundColor: "rgba(34, 197, 94, 0.1)",
-                fill: true,
-                pointBackgroundColor: "rgba(34, 197, 94, 1)",
-                pointBorderColor: "#ffffff",
-                pointHoverBackgroundColor: "#ffffff",
-                pointHoverBorderColor: "rgba(34, 197, 94, 1)",
-            },
-            {
-                label: "Other Revenue",
-                data: labels.map(() => Math.floor(Math.random() * 25000) + 5000),
-                borderColor: "rgba(59, 130, 246, 1)",
-                backgroundColor: "rgba(59, 130, 246, 0.1)",
-                fill: true,
-                pointBackgroundColor: "rgba(59, 130, 246, 1)",
-                pointBorderColor: "#ffffff",
-                pointHoverBackgroundColor: "#ffffff",
-                pointHoverBorderColor: "rgba(59, 130, 246, 1)",
-            }
-        ]
-    }
-
-    const totalProfit = profitData.datasets[0].data.reduce((a, b) => a + b, 0);
-    const totalRevenue = revenueData.datasets[0].data.reduce((a, b) => a + b, 0);
+    };
 
     return (
         <div className="bg-white p-6 rounded-xl shadow-lg border border-gray-100">
             <div className="flex justify-between items-center mb-6">
                 <div>
-                    <h3 className="text-xl font-bold text-gray-800">User Growth Overview</h3>
-                    <p className="text-gray-500 text-sm">December 2024 Performance</p>
+                    <h3 className="text-xl font-bold text-gray-800">Orders & User Growth</h3>
+                    <p className="text-gray-500 text-sm">Last 30 Days Performance</p>
                 </div>
-                <span className="px-3 py-1 bg-purple-100 text-purple-800 rounded-full text-sm font-medium">+8.3%</span>
+                <span className="px-3 py-1 bg-blue-100 text-blue-800 rounded-full text-sm font-medium">
+                    +{totalOrders} Orders
+                </span>
             </div>
             <div className="h-80">
-                <Line data={profitData} options={chartOptions} />
+                <Line data={growthData} options={chartOptions} />
             </div>
-            <div className="mt-4 flex justify-between items-center">
+            <div className="mt-4 grid grid-cols-3 gap-4">
                 <div>
-                    <p className="text-gray-600">Total Profit</p>
-                    <p className="text-2xl font-bold text-purple-600">
-                        ${(totalProfit / 1000).toFixed(1)}k
+                    <p className="text-gray-600 text-sm">Total Orders</p>
+                    <p className="text-lg font-bold text-blue-600">
+                        {totalOrders}
                     </p>
                 </div>
-                <div className="text-right">
-                    <p className="text-gray-600">Profit Margin</p>
+                <div>
+                    <p className="text-gray-600 text-sm">New Users</p>
+                    <p className="text-lg font-bold text-amber-600">
+                        {totalUsers}
+                    </p>
+                </div>
+                <div>
+                    <p className="text-gray-600 text-sm">Avg Orders/User</p>
                     <p className="text-lg font-semibold text-gray-800">
-                        {((totalProfit / totalRevenue) * 100).toFixed(1)}%
+                        {avgOrdersPerUser}
                     </p>
                 </div>
             </div>
         </div>
-    )
+    );
+}
+
+// Helper function to generate realistic growth data
+function generateGrowthData() {
+    const labels = Array.from({ length: 30 }, (_, i) => {
+        const date = new Date();
+        date.setDate(date.getDate() - 29 + i);
+        return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+    });
+
+    let orders = 15;
+    let users = 8;
+    const ordersData = [];
+    const usersData = [];
+
+    for (let i = 0; i < 30; i++) {
+        // Simulate business growth patterns
+        orders += Math.random() * 5 - 1;
+        users += Math.random() * 3 - 0.5;
+
+        ordersData.push(Math.max(5, orders));
+        usersData.push(Math.max(2, users));
+    }
+
+    return { labels, orders: ordersData, users: usersData };
 }

@@ -9,7 +9,6 @@ import {
     Tooltip,
     Legend,
     Filler,
-    Tick,
 } from 'chart.js';
 
 ChartJS.register(
@@ -23,37 +22,45 @@ ChartJS.register(
     Filler
 );
 
-export default function RevenueChart() {
-    const labels = Array.from({ length: 30 }, (_, i) => `Dec ${i + 1}`);
+interface RevenueChartProps {
+    data?: {
+        labels: string[];
+        revenue: number[];
+        profit: number[];
+    };
+}
+
+export default function RevenueChart({ data }: RevenueChartProps) {
+    // Generate realistic data if not provided
+    const chartData = data || generateRevenueData();
 
     const revenueData = {
-        labels,
+        labels: chartData.labels,
         datasets: [
             {
                 label: "Revenue",
-                data: labels.map(() => Math.floor(Math.random() * 35000) + 5000),
+                data: chartData.revenue,
                 borderColor: "rgba(34, 197, 94, 1)",
                 backgroundColor: "rgba(34, 197, 94, 0.1)",
                 fill: true,
-                pointBackgroundColor: "rgba(34, 197, 94, 1)",
-                pointBorderColor: "#ffffff",
-                pointHoverBackgroundColor: "#ffffff",
-                pointHoverBorderColor: "rgba(34, 197, 94, 1)",
+                tension: 0.4,
+                borderWidth: 3,
             },
             {
-                label: "Other Revenue",
-                data: labels.map(() => Math.floor(Math.random() * 25000) + 5000),
-                borderColor: "rgba(59, 130, 246, 1)",
-                backgroundColor: "rgba(59, 130, 246, 0.1)",
+                label: "Profit",
+                data: chartData.profit,
+                borderColor: "rgba(168, 85, 247, 1)",
+                backgroundColor: "rgba(168, 85, 247, 0.1)",
                 fill: true,
-                pointBackgroundColor: "rgba(59, 130, 246, 1)",
-                pointBorderColor: "#ffffff",
-                pointHoverBackgroundColor: "#ffffff",
-                pointHoverBorderColor: "rgba(59, 130, 246, 1)",
+                tension: 0.4,
+                borderWidth: 3,
             }
         ]
-    }
-    const totalRevenue = revenueData.datasets[0].data.reduce((a, b) => a + b, 0);
+    };
+
+    const totalRevenue = chartData.revenue.reduce((a, b) => a + b, 0);
+    const totalProfit = chartData.profit.reduce((a, b) => a + b, 0);
+    const profitMargin = ((totalProfit / totalRevenue) * 100);
 
     const chartOptions = {
         responsive: true,
@@ -70,85 +77,101 @@ export default function RevenueChart() {
             tooltip: {
                 mode: "index" as const,
                 intersect: false,
-                backgroundColor: 'rgba(255, 255, 255, 0.95)',
-                titleColor: '#1f2937',
-                bodyColor: '#1f2937',
-                borderColor: '#e5e7eb',
-                borderWidth: 1,
-                padding: 12,
-                boxPadding: 6,
+                callbacks: {
+                    label: function(context: any) {
+                        let label = context.dataset.label || '';
+                        if (label) {
+                            label += ': ';
+                        }
+                        if (context.parsed.y !== null) {
+                            label += `৳${context.parsed.y.toLocaleString()}`;
+                        }
+                        return label;
+                    }
+                }
             },
-        },
-        interaction: {
-            mode: 'nearest' as const,
-            axis: 'x' as const,
-            intersect: false
         },
         scales: {
             x: {
-                grid: {
-                    display: false,
-                    drawBorder: false,
-                },
-                ticks: {
-                    maxTicksLimit: 8,
-                    color: '#6b7280',
-                }
+                grid: { display: false },
+                ticks: { maxTicksLimit: 8 }
             },
             y: {
-                grid: {
-                    color: '#f3f4f6',
-                    drawBorder: false,
-                },
+                grid: { color: '#f3f4f6' },
                 ticks: {
-                        color: '#6b7280',
-                        callback: (value: number | string | Tick) => {
-                        const num = typeof value === 'number' ? value : Number(value);
-                        return `$${(num / 1000).toFixed(0)}k`;
+                    callback: function(value: any) {
+                        return `৳${(value / 1000).toFixed(0)}k`;
                     }
                 }
             }
         },
         elements: {
-            point: {
-                radius: 0,
-                hoverRadius: 6,
-                hoverBorderWidth: 2,
-            },
-            line: {
-                tension: 0.4,
-                borderWidth: 3,
-            }
+            point: { radius: 0, hoverRadius: 6 }
         },
-    }
-
+    };
 
     return (
         <div className="bg-white p-6 rounded-xl shadow-lg border border-gray-100">
             <div className="flex justify-between items-center mb-6">
                 <div>
-                    <h3 className="text-xl font-bold text-gray-800">Revenue Analytics</h3>
-                    <p className="text-gray-500 text-sm">December 2024 Performance</p>
+                    <h3 className="text-xl font-bold text-gray-800">Revenue & Profit Analytics</h3>
+                    <p className="text-gray-500 text-sm">Last 30 Days Performance</p>
                 </div>
-                <span className="px-3 py-1 bg-green-100 text-green-800 rounded-full text-sm font-medium">+12.5%</span>
+                <span className="px-3 py-1 bg-green-100 text-green-800 rounded-full text-sm font-medium">
+                    +{profitMargin.toFixed(1)}% Margin
+                </span>
             </div>
             <div className="h-80">
                 <Line data={revenueData} options={chartOptions} />
             </div>
-            <div className="mt-4 flex justify-between items-center">
+            <div className="mt-4 grid grid-cols-3 gap-4">
                 <div>
-                    <p className="text-gray-600">Total Revenue</p>
-                    <p className="text-2xl font-bold text-green-600">
-                        ${(totalRevenue / 1000).toFixed(1)}k
+                    <p className="text-gray-600 text-sm">Total Revenue</p>
+                    <p className="text-lg font-bold text-green-600">
+                        ৳{(totalRevenue / 1000).toFixed(1)}k
                     </p>
                 </div>
-                <div className="text-right">
-                    <p className="text-gray-600">Avg. Daily</p>
+                <div>
+                    <p className="text-gray-600 text-sm">Total Profit</p>
+                    <p className="text-lg font-bold text-purple-600">
+                        ৳{(totalProfit / 1000).toFixed(1)}k
+                    </p>
+                </div>
+                <div>
+                    <p className="text-gray-600 text-sm">Profit Margin</p>
                     <p className="text-lg font-semibold text-gray-800">
-                        ${(totalRevenue / 30 / 1000).toFixed(1)}k
+                        {profitMargin.toFixed(1)}%
                     </p>
                 </div>
             </div>
         </div>
-    )
+    );
+}
+
+// Helper function to generate realistic revenue data
+function generateRevenueData() {
+    const labels = Array.from({ length: 30 }, (_, i) => {
+        const date = new Date();
+        date.setDate(date.getDate() - 29 + i);
+        return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+    });
+
+    let revenue = 5000;
+    let profit = 2000;
+    const revenueData = [];
+    const profitData = [];
+
+    for (let i = 0; i < 30; i++) {
+        // Add some randomness but maintain trend
+        revenue += Math.random() * 1000 - 200;
+        profit += Math.random() * 500 - 100;
+
+        // Ensure profit is always less than revenue
+        profit = Math.min(profit, revenue * 0.6);
+
+        revenueData.push(Math.max(1000, revenue));
+        profitData.push(Math.max(500, profit));
+    }
+
+    return { labels, revenue: revenueData, profit: profitData };
 }
