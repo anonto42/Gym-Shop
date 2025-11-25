@@ -82,11 +82,11 @@ const PackageDisplayCard = React.memo(({ pkg }: PackageDisplayCardProps) => {
 
                     <div className="mt-3 space-y-1">
                         <p className="text-2xl font-bold text-[#125BAC]">
-                            ${pkg.price || 0}
+                            ৳{pkg.price || 0}
                         </p>
                         {pkg.originalPrice && pkg.originalPrice > (pkg.price || 0) && (
                             <p className="text-sm text-gray-500 line-through">
-                                ${pkg.originalPrice}
+                                ৳{pkg.originalPrice}
                             </p>
                         )}
                         <p className="text-xs text-gray-400 capitalize">
