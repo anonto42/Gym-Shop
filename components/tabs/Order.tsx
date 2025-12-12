@@ -537,7 +537,7 @@ function OrderDetailsModal({ order, onClose, onStatusUpdate, onPaymentStatusUpda
                                     </div>
                                     <div>
                                         <label className="text-sm font-medium text-gray-600">User ID</label>
-                                        <p className="text-gray-900">{order.user._id.toString()}</p>
+                                        <p className="text-gray-900">{(order.user? order.user._id : "ID-Not-founded").toString()}</p>
                                     </div>
                                 </div>
                             </div>
